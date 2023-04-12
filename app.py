@@ -36,8 +36,8 @@ def option_clicked():
         top.grab_set() #Block the main window
         top.protocol("WM_DELETE_WINDOW", lambda: top.destroy())
         #Get screen dimensions
-        screen_width = top.winfo_screenwidth()
-        screen_height = top.winfo_screenheight()
+        screen_width = 1920
+        screen_height = 1080
         #Set window dimensions
         top_width = int(screen_width * 0.25)
         top_height = int(screen_height*0.3)
@@ -74,8 +74,8 @@ def option_clicked():
         top.grab_set() #Block the main window
         top.protocol("WM_DELETE_WINDOW", lambda: top.destroy())
         #Get screen dimensions
-        screen_width = top.winfo_screenwidth()
-        screen_height = top.winfo_screenheight()
+        screen_width = 1920
+        screen_height = 1080
         #Set window dimensions
         top_width = int(screen_width * 0.25)
         top_height = int(screen_height*0.3)
@@ -112,8 +112,10 @@ def option_clicked():
         top.grab_set() #Block the main window
         top.protocol("WM_DELETE_WINDOW", lambda: top.destroy())
         #Get screen dimensions
-        screen_width = top.winfo_screenwidth()
-        screen_height = top.winfo_screenheight()
+        screen_width = 1920
+        screen_height = 1080
+
+
         #Set window dimensions
         top_width = int(screen_width * 0.25)
         top_height = int(screen_height*0.3)
@@ -151,8 +153,9 @@ window = tkinter.Tk()
 window.title("Image Procesing App")
 
 #Get screen dimensions
-screen_width = window.winfo_screenwidth()
-screen_height = window.winfo_screenheight()
+screen_width = 1920
+screen_height = 1080
+print(screen_height, screen_width)
 #Set window dimensions
 window_width = int(screen_width * 0.7)
 window_height = int(screen_height*0.6)
