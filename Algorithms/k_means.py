@@ -8,7 +8,7 @@ image = image_data.get_fdata()
 
 tol = 1
 tau = 150
-iterations = 10
+iterations = 3
 k1 = np.amin(image)
 k2 = np.mean(image)
 k3 = np.amax(image) 
@@ -26,6 +26,9 @@ for i in range(0,iterations):
     k1 = image[segmentation == 0].mean()
     k2 = image[segmentation == 1].mean()
     k3 = image[segmentation == 2].mean()
+
+    if np.abs(k1 - k2) < tol and np.abs(k2-k3) < tol and np.abs(k1-k3) < tol:
+        break
 
 
 #Show image
