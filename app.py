@@ -5,6 +5,8 @@ import nibabel as nib
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from Algorithms.thresholding import thresholding_form
+from Algorithms.k_means import k_form
 
 #FUNCTIONS
 def browse_file():
@@ -15,58 +17,31 @@ def browse_file():
       #Updates the values in the Combo box
       paths_combobox.config(values=path_list)
 
-
+canvas_widget = None
 def display_image():
+    global canvas_widget
     file_path = paths_combobox.get()
     if file_path:
         image_data=nib.load(file_path)
         image = image_data.get_fdata()
         canvas.delete("all")
+
         fig, ax= plt.subplots()
         ax.imshow(image[:,:,20])
-        canvas_widget = FigureCanvasTkAgg(fig,canvas)
-        canvas_widget.draw()
-        canvas_widget.get_tk_widget().pack()
+
+        if canvas_widget is None:
+            canvas_widget = FigureCanvasTkAgg(fig,canvas)
+            canvas_widget.get_tk_widget().pack()
+        else:    
+            canvas_widget.figure = fig
+            canvas_widget.draw()
+
 
 def option_clicked():
     selected_option = option.get()
+    file_path = paths_combobox.get()
     if selected_option == "thresholding":
-        top = tkinter.Toplevel()
-        top.title("Thresholding Form")
-        top.grab_set() #Block the main window
-        top.protocol("WM_DELETE_WINDOW", lambda: top.destroy())
-        #Get screen dimensions
-        screen_width = 1920
-        screen_height = 1080
-        #Set window dimensions
-        top_width = int(screen_width * 0.25)
-        top_height = int(screen_height*0.3)
-        #Position
-        top_x = int(screen_width/3)
-        top_y = int(screen_height/4)
-        top.geometry(f"{top_width}x{top_height}+{top_x}+{top_y}")
-
-        #Label
-        title_label = tkinter.Label(top, text="Thresholding Form", font=("Times New Roman", 15, "bold"))
-        tolerance_label = tkinter.Label(top, text="Tolerance: ", font=("Times New Roman", 15, "bold"))
-        tau_label = tkinter.Label(top, text="Tau: ", font=("Times New Roman", 15, "bold"))
-
-        #Textfield
-        tolerance_entry = tkinter.Entry(top, width=20, text="tolerance")
-        tau_entry = tkinter.Entry(top, width=20, text="tau")
-
-        #Button
-        finish_button = tkinter.Button(top, text="Finish Form", width=20, height=2)
-
-        #Pack
-        title_label.place(x=top_width/2, y=10, anchor="n")
-        tolerance_label.place(x=top_width*0.1, y=70, anchor="w")
-        tau_label.place(x=top_width*0.1, y=100, anchor="w")
-        tolerance_entry.place(x=top_width*0.4, y=70, anchor="w")
-        tau_entry.place(x=top_width*0.4, y=100, anchor="w")
-        finish_button.place(x=top_width/2, y= 200, anchor="n")
-
-        top.mainloop()
+        thresholding_form(file_path)
     
     if selected_option == "region growing":
         top = tkinter.Toplevel()
@@ -107,49 +82,14 @@ def option_clicked():
         top.mainloop()
 
     if selected_option == "k-means":
-        top = tkinter.Toplevel()
-        top.title("K-means Form")
-        top.grab_set() #Block the main window
-        top.protocol("WM_DELETE_WINDOW", lambda: top.destroy())
-        #Get screen dimensions
-        screen_width = 1920
-        screen_height = 1080
-
-
-        #Set window dimensions
-        top_width = int(screen_width * 0.25)
-        top_height = int(screen_height*0.3)
-        #Position
-        top_x = int(screen_width/3)
-        top_y = int(screen_height/4)
-        top.geometry(f"{top_width}x{top_height}+{top_x}+{top_y}")
-
-        #Label
-        title_label = tkinter.Label(top, text="K-means Form", font=("Times New Roman", 15, "bold"))
-        tolerance_label = tkinter.Label(top, text="Tolerance: ", font=("Times New Roman", 15, "bold"))
-        tau_label = tkinter.Label(top, text="Tau: ", font=("Times New Roman", 15, "bold"))
-
-        #Textfield
-        tolerance_entry = tkinter.Entry(top, width=20, text="tolerance")
-        tau_entry = tkinter.Entry(top, width=20, text="tau")
-
-        #Button
-        finish_button = tkinter.Button(top, text="Finish Form", width=20, height=2)
-
-        #Pack
-        title_label.place(x=top_width/2, y=10, anchor="n")
-        tolerance_label.place(x=top_width*0.1, y=70, anchor="w")
-        tau_label.place(x=top_width*0.1, y=100, anchor="w")
-        tolerance_entry.place(x=top_width*0.4, y=70, anchor="w")
-        tau_entry.place(x=top_width*0.4, y=100, anchor="w")
-        finish_button.place(x=top_width/2, y= 200, anchor="n")
-
-        top.mainloop()
+        k_form(file_path)
     
-
+def on_closing():
+    window.destroy()
 #GUI
 
 window = tkinter.Tk()
+window.protocol("WM_DELETE_WINDOW", on_closing)
 window.title("Image Procesing App")
 
 #Get screen dimensions
@@ -181,8 +121,8 @@ show_img_button = tkinter.Button(window, text="Show Image", width=40 ,command= d
 apply_button = tkinter.Button(window, text="Apply", width=40, height=2,command = option_clicked)
 
 #Radio Buttons
-original_button = tkinter.Radiobutton(window, text="Original", variable =option, value="original")
-original_button.config(font=("Times New Roman", 16), padx=10, pady=10)
+#original_button = tkinter.Radiobutton(window, text="Original", variable =option, value="original")
+#original_button.config(font=("Times New Roman", 16), padx=10, pady=10)
 thresholding_button = tkinter.Radiobutton(window, text="Thresholding", variable = option, value="thresholding")
 thresholding_button.config(font=("Times New Roman", 16), padx=10, pady=10)
 reg_growing_button = tkinter.Radiobutton(window, text="Region Growing", variable = option, value="region growing")
@@ -214,7 +154,7 @@ axis_label.place(x=10, y=158, anchor="w")
 axis_combobox.place(x=240, y=150, anchor="n")
 show_img_button.place(x=180, y = 180, anchor="n")
 segmentation_label.place(x=10, y= 230, anchor="w")
-original_button.place(x=10, y= 270, anchor="w")
+#original_button.place(x=10, y= 270, anchor="w")
 thresholding_button.place(x=10, y=310, anchor="w" )
 reg_growing_button.place(x=10, y=350, anchor="w")
 k_means_button.place(x=10, y=390, anchor="w")
