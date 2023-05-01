@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tkinter
 
-def k_img(path,tolerance, iterations):
+def k_img(path,tolerance, iterations, axis, axis_value):
     image_data = nib.load(path)
     image = image_data.get_fdata()
 
@@ -30,18 +30,23 @@ def k_img(path,tolerance, iterations):
 
 
     #Show image
-    plt.imshow(segmentation[:,:,100])
+    if (axis == "x"):
+        plt.imshow(segmentation[axis_value,:,:])
+    elif (axis == "y"):
+        plt.imshow(segmentation[:,axis_value,:])
+    elif (axis == "z"):
+        plt.imshow(segmentation[:,:,axis_value])
     #Show histogram
     #plt.hist(image.flatten(), 100)
     plt.show()
 
-def k_form(path):
+def k_form(path, axis, axis_value):
     #Gets the values for the thresholding algorithm
     def finish_form():
         tol=float(tolerance_entry.get())
         i=int(iteration_entry.get())
 
-        k_img(path,tol,i)
+        k_img(path,tol,i,axis, axis_value)
 
         top.destroy()
     #GUI

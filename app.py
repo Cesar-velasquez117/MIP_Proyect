@@ -1,12 +1,13 @@
 import tkinter
 from tkinter import filedialog, ttk
-from PIL import Image, ImageTk
+import os
 import nibabel as nib
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from Algorithms.thresholding import thresholding_form
 from Algorithms.k_means import k_form
+from Algorithms.region_growing import region_form
 
 #FUNCTIONS
 def browse_file():
@@ -18,6 +19,22 @@ def browse_file():
       paths_combobox.config(values=path_list)
 
 canvas_widget = None
+axis = ""
+axis_value = 0
+
+def is_int(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
+
+def on_validate_int(new_value):
+    if new_value.strip() == "":
+        return True
+    return is_int(new_value)
+
+
 def display_image():
     global canvas_widget
     file_path = paths_combobox.get()
@@ -25,9 +42,74 @@ def display_image():
         image_data=nib.load(file_path)
         image = image_data.get_fdata()
         canvas.delete("all")
+        filename = os.path.basename(file_path)
+
+        #Slider 
+        global axis
+        axis = axis_combobox.get()
+        if (axis == "x"):
+            slider = tkinter.Scale(window, from_=0, to=image.shape[0]-1, orient=tkinter.HORIZONTAL)
+        elif (axis == "y"):
+            slider = tkinter.Scale(window, from_=0, to=image.shape[1]-1, orient=tkinter.HORIZONTAL)
+        elif (axis == "z"):
+            slider = tkinter.Scale(window, from_=0, to=image.shape[2]-1, orient=tkinter.HORIZONTAL)
+        slider.place(x=10, y=185, anchor="w")
+
+        #Slider Entry
+        def set_slider_value():
+            value = int(slider_value_entry.get())
+            if axis == "x":
+                if value < 0:
+                    value = 0
+                elif value >= image.shape[0]:
+                    value = image.shape[0] - 1
+            elif axis == "y":
+                if value < 0:
+                    value = 0
+                elif value >= image.shape[1]:
+                    value = image.shape[1] - 1
+            elif axis == "z":
+                if value < 0:
+                    value = 0
+                elif value >= image.shape[2]:
+                    value = image.shape[2] - 1
+            slider.set(value)
+            update_image()
+
+        slider_value_entry = tkinter.Entry(window, validate="key")
+        slider_value_entry.configure(validatecommand=(window.register(on_validate_int), '%P'))
+        slider_value_entry.place(x=150, y=192.5, anchor="w")
+        set_value_button = tkinter.Button(window, text="Go", command=set_slider_value)
+        set_value_button.place(x=280, y=192.5, anchor="w")
+
+        def update_image(*args):
+            global axis_value
+            if (axis == "x"):
+                x = slider.get()
+                axis_value = x
+                ax.imshow(image [x,:,:])
+                canvas_widget.draw()
+            elif (axis == "y"):
+                y = slider.get()
+                axis_value = y
+                ax.imshow(image [:,y,:])
+                canvas_widget.draw()
+            elif (axis == "z"):
+                z = slider.get()
+                axis_value = z
+                ax.imshow(image [:,:,z])
+                canvas_widget.draw()
+        
+        slider.bind("<B1-Motion>", update_image)
 
         fig, ax= plt.subplots()
-        ax.imshow(image[:,:,20])
+        if (axis == "x"):
+            ax.imshow(image[0,:,:])
+        elif (axis == "y"):
+            ax.imshow(image[:,0,:])
+        elif (axis == "z"):
+            ax.imshow(image[:,:,0])
+        
 
         if canvas_widget is None:
             canvas_widget = FigureCanvasTkAgg(fig,canvas)
@@ -41,48 +123,13 @@ def option_clicked():
     selected_option = option.get()
     file_path = paths_combobox.get()
     if selected_option == "thresholding":
-        thresholding_form(file_path)
+        thresholding_form(file_path, axis, axis_value)
     
     if selected_option == "region growing":
-        top = tkinter.Toplevel()
-        top.title("Region Growing Form")
-        top.grab_set() #Block the main window
-        top.protocol("WM_DELETE_WINDOW", lambda: top.destroy())
-        #Get screen dimensions
-        screen_width = 1920
-        screen_height = 1080
-        #Set window dimensions
-        top_width = int(screen_width * 0.25)
-        top_height = int(screen_height*0.3)
-        #Position
-        top_x = int(screen_width/3)
-        top_y = int(screen_height/4)
-        top.geometry(f"{top_width}x{top_height}+{top_x}+{top_y}")
-
-        #Label
-        title_label = tkinter.Label(top, text="Region Growing Form", font=("Times New Roman", 15, "bold"))
-        tolerance_label = tkinter.Label(top, text="Tolerance: ", font=("Times New Roman", 15, "bold"))
-        tau_label = tkinter.Label(top, text="Tau: ", font=("Times New Roman", 15, "bold"))
-
-        #Textfield
-        tolerance_entry = tkinter.Entry(top, width=20, text="tolerance")
-        tau_entry = tkinter.Entry(top, width=20, text="tau")
-
-        #Button
-        finish_button = tkinter.Button(top, text="Finish Form", width=20, height=2)
-
-        #Pack
-        title_label.place(x=top_width/2, y=10, anchor="n")
-        tolerance_label.place(x=top_width*0.1, y=70, anchor="w")
-        tau_label.place(x=top_width*0.1, y=100, anchor="w")
-        tolerance_entry.place(x=top_width*0.4, y=70, anchor="w")
-        tau_entry.place(x=top_width*0.4, y=100, anchor="w")
-        finish_button.place(x=top_width/2, y= 200, anchor="n")
-
-        top.mainloop()
+        region_form(file_path)
 
     if selected_option == "k-means":
-        k_form(file_path)
+        k_form(file_path, axis, axis_value)
     
 def on_closing():
     window.destroy()
@@ -121,8 +168,6 @@ show_img_button = tkinter.Button(window, text="Show Image", width=40 ,command= d
 apply_button = tkinter.Button(window, text="Apply", width=40, height=2,command = option_clicked)
 
 #Radio Buttons
-#original_button = tkinter.Radiobutton(window, text="Original", variable =option, value="original")
-#original_button.config(font=("Times New Roman", 16), padx=10, pady=10)
 thresholding_button = tkinter.Radiobutton(window, text="Thresholding", variable = option, value="thresholding")
 thresholding_button.config(font=("Times New Roman", 16), padx=10, pady=10)
 reg_growing_button = tkinter.Radiobutton(window, text="Region Growing", variable = option, value="region growing")
@@ -140,8 +185,6 @@ axis_list = ["x","y","z"]
 axis_combobox = ttk.Combobox(window, width=30, height=3, values=axis_list)
 
 
-
-
 #Pack
 color_label.place(x=window_width/2 , y=0,  anchor="n")
 welcome_label.place(x=window_width/2 , y=10,  anchor="n")
@@ -152,12 +195,11 @@ files_label.place(x=10, y=128, anchor="w")
 paths_combobox.place(x=240, y=120, anchor="n")
 axis_label.place(x=10, y=158, anchor="w")
 axis_combobox.place(x=240, y=150, anchor="n")
-show_img_button.place(x=180, y = 180, anchor="n")
-segmentation_label.place(x=10, y= 230, anchor="w")
-#original_button.place(x=10, y= 270, anchor="w")
-thresholding_button.place(x=10, y=310, anchor="w" )
-reg_growing_button.place(x=10, y=350, anchor="w")
-k_means_button.place(x=10, y=390, anchor="w")
+show_img_button.place(x=180, y = 220, anchor="n")
+segmentation_label.place(x=10, y= 270, anchor="w")
+thresholding_button.place(x=10, y=330, anchor="w" )
+reg_growing_button.place(x=10, y=370, anchor="w")
+k_means_button.place(x=10, y=410, anchor="w")
 apply_button.place(x=180, y = 580, anchor="n")
 
 window.mainloop()

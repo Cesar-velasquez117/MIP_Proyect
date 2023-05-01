@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tkinter
 
-def threshold_img(path, tolerance, tau):
+def threshold_img(path, tolerance, tau, axis, axis_value):
     image_data = nib.load(path)
     image = image_data.get_fdata()
 
@@ -20,19 +20,38 @@ def threshold_img(path, tolerance, tau):
             tau = post_tau
         
     #Show image
-    plt.imshow(segmentation[:,:,100])
+    if (axis == "x"):
+        plt.imshow(segmentation[axis_value,:,:])
+    elif (axis == "y"):
+        plt.imshow(segmentation[:,axis_value,:])
+    elif (axis == "z"):
+        plt.imshow(segmentation[:,:,axis_value])
     #Show histogram
     #plt.hist(image.flatten(), 50)
     plt.show()
 
-def thresholding_form(path):
+def is_float(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+def on_validate_float(new_value):
+    if new_value.strip() == "":
+        return True
+    return is_float(new_value)
+
+def thresholding_form(path, axis, axis_value):
     #Gets the values for the thresholding algorithm
     def finish_form():
         tau=float(tau_entry.get())
         tol=float(tolerance_entry.get())
 
-        threshold_img(path,tol,tau)
+        threshold_img(path,tol,tau, axis, axis_value)
 
+        tau_entry.delete(0, tkinter.END)
+        tolerance_entry.delete(0, tkinter.END)
         top.destroy()
     #GUI
     top = tkinter.Toplevel()
@@ -56,8 +75,10 @@ def thresholding_form(path):
     tau_label = tkinter.Label(top, text="Tau: ", font=("Times New Roman", 15, "bold"))
 
     #Textfield
-    tolerance_entry = tkinter.Entry(top, width=20, text="tolerance")
-    tau_entry = tkinter.Entry(top, width=20, text="tau")
+    tolerance_entry = tkinter.Entry(top, width=20, text="tolerance", validate="key")
+    tolerance_entry.configure(validatecommand=(top.register(on_validate_float), '%P'))
+    tau_entry = tkinter.Entry(top, width=20, text="tau",validate="key")
+    tau_entry.configure(validatecommand=(top.register(on_validate_float), '%P'))
 
     #Button
     finish_button = tkinter.Button(top, text="Finish Form", width=20, height=2, command=finish_form)
