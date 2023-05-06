@@ -3,31 +3,29 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tkinter
 
-def k_img(path,tolerance, iterations, axis, axis_value):
+def k_img(path,tolerance, iterations, k, axis, axis_value):
     image_data = nib.load(path)
     image = image_data.get_fdata()
 
-    k1 = np.amin(image)
-    k2 = np.mean(image)
-    k3 = np.amax(image) 
+    # initialize centroids
+    centroids = np.random.choice(image.flatten(), k)
+    centroids_old = centroids.copy()
 
-    for i in range(0,iterations):
-        d1 = np.abs(k1-image)
-        d2 = np.abs(k2-image)
-        d3 = np.abs(k3-image)
+    for i in range(0, iterations):
+        distances = np.zeros((image.shape[0], image.shape[1], image.shape[2], k))
+        for j, c in enumerate(centroids):
+            distances[:, :, :, j] = np.sqrt((image - c) ** 2)
+        segmentation = np.argmin(distances, axis=-1)
 
-        segmentation = np.zeros_like(image)
-        segmentation[np.multiply(d1 < d2, d1 < d3)] = 0
-        segmentation[np.multiply(d2 < d1, d2 < d3)] = 1
-        segmentation[np.multiply(d3 < d1, d3 < d2)] = 2
+        for j in range(k):
+            cluster = image[segmentation == j]
+            if len(cluster) > 0:
+                centroids[j] = cluster.mean()
 
-        k1 = image[segmentation == 0].mean()
-        k2 = image[segmentation == 1].mean()
-        k3 = image[segmentation == 2].mean()
-
-        if np.abs(k1 - k2) < tolerance and np.abs(k2-k3) < tolerance and np.abs(k1-k3) < tolerance:
+        if np.allclose(centroids, centroids_old, atol=tolerance):
             break
 
+        centroids_old = centroids.copy()
 
     #Show image
     if (axis == "x"):
@@ -36,18 +34,46 @@ def k_img(path,tolerance, iterations, axis, axis_value):
         plt.imshow(segmentation[:,axis_value,:])
     elif (axis == "z"):
         plt.imshow(segmentation[:,:,axis_value])
-    #Show histogram
-    #plt.hist(image.flatten(), 100)
+    # Show histogram
+    # plt.hist(image.flatten(), 100)
     plt.show()
+
+def is_float(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+def on_validate_float(new_value):
+    if new_value.strip() == "":
+        return True
+    return is_float(new_value)
+
+def is_int(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
+
+def on_validate_int(new_value):
+    if new_value.strip() == "":
+        return True
+    return is_int(new_value)
 
 def k_form(path, axis, axis_value):
     #Gets the values for the thresholding algorithm
     def finish_form():
         tol=float(tolerance_entry.get())
         i=int(iteration_entry.get())
+        k=int(k_entry.get())
 
-        k_img(path,tol,i,axis, axis_value)
+        k_img(path,tol,i,k,axis, axis_value)
 
+        tolerance_entry.delete(0, tkinter.END)
+        iteration_entry.delete(0, tkinter.END)
+        k_entry.delete(0, tkinter.END)
         top.destroy()
     #GUI
     top = tkinter.Toplevel()
@@ -69,10 +95,15 @@ def k_form(path, axis, axis_value):
     title_label = tkinter.Label(top, text="K-Means Form", font=("Times New Roman", 15, "bold"))
     tolerance_label = tkinter.Label(top, text="Tolerance: ", font=("Times New Roman", 15, "bold"))
     iteration_label = tkinter.Label(top, text="# Iterations: ", font=("Times New Roman", 15, "bold"))
+    k_label = tkinter.Label(top, text="# K's: ", font=("Times New Roman", 15, "bold"))
 
     #Textfield
-    tolerance_entry = tkinter.Entry(top, width=20, text="tolerance")
-    iteration_entry = tkinter.Entry(top, width=10, text="iterations")
+    tolerance_entry = tkinter.Entry(top, width=20, validate="key")
+    tolerance_entry.configure(validatecommand=(top.register(on_validate_float), '%P'))
+    iteration_entry = tkinter.Entry(top, width=10, validate="key")
+    iteration_entry.configure(validatecommand=(top.register(on_validate_int), '%P'))
+    k_entry = tkinter.Entry(top, width=10,validate="key")
+    k_entry.configure(validatecommand=(top.register(on_validate_int), '%P'))
 
     #Button
     finish_button = tkinter.Button(top, text="Finish Form", width=20, height=2, command=finish_form)
@@ -81,8 +112,10 @@ def k_form(path, axis, axis_value):
     title_label.place(x=top_width/2, y=10, anchor="n")
     tolerance_label.place(x=top_width*0.1, y=70, anchor="w")
     iteration_label.place(x=top_width*0.1, y=100, anchor="w")
+    k_label.place(x=top_width*0.1, y=130, anchor="w")
     tolerance_entry.place(x=top_width*0.4, y=70, anchor="w")
     iteration_entry.place(x=top_width*0.4, y=100, anchor="w")
+    k_entry.place(x=top_width*0.4, y=130, anchor="w")
     finish_button.place(x=top_width/2, y= 200, anchor="n")
 
     top.mainloop()

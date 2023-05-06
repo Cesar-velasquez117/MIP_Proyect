@@ -3,7 +3,7 @@ import nibabel as nib
 import numpy as np
 import matplotlib.pyplot as plt
 
-def region_img(path, tolerance, origin_x, origin_y ,origin_z):
+def region_img(path, tolerance, origin_x, origin_y ,origin_z, axis, axis_value):
     image_data = nib.load(path)
     image = image_data.get_fdata()
 
@@ -43,13 +43,17 @@ def region_img(path, tolerance, origin_x, origin_y ,origin_z):
       if len(tail) == 0:
         break
 
-    #Show image
-    plt.imshow(segmentation[:,:,20])
+    if (axis == "x"):
+        plt.imshow(segmentation[axis_value,:,:])
+    elif (axis == "y"):
+        plt.imshow(segmentation[:,axis_value,:])
+    elif (axis == "z"):
+        plt.imshow(segmentation[:,:,axis_value])
     #Show histogram
     #plt.hist(image.flatten(), 50)
     plt.show()
 
-def region_form(path):
+def region_form(path, axis, axis_value):
     #Gets the values for the thresholding algorithm
     def finish_form():
         tol=float(tolerance_entry.get())
@@ -57,7 +61,7 @@ def region_form(path):
         y = int(y_entry.get())
         z = int(z_entry.get())
 
-        region_img(path,tol,x,y,z)
+        region_img(path,tol,x,y,z,axis,axis_value)
 
         top.destroy()
 

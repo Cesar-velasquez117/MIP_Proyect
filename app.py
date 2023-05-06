@@ -1,22 +1,25 @@
 import tkinter
+import customtkinter as ctk
 from tkinter import filedialog, ttk
 import os
 import nibabel as nib
-import numpy as np
+from PIL import Image
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from Algorithms.thresholding import thresholding_form
 from Algorithms.k_means import k_form
 from Algorithms.region_growing import region_form
+from Classes.SlidePanel import SlidePanel
+
 
 #FUNCTIONS
 def browse_file():
     file_path = filedialog.askopenfilename()
     if file_path:
-      selected_file_label.config(text=file_path)
+      selected_file_label.configure(text=file_path)
       path_list.append(file_path)
       #Updates the values in the Combo box
-      paths_combobox.config(values=path_list)
+      paths_combobox.configure(values=path_list)
 
 canvas_widget = None
 axis = ""
@@ -48,12 +51,12 @@ def display_image():
         global axis
         axis = axis_combobox.get()
         if (axis == "x"):
-            slider = tkinter.Scale(window, from_=0, to=image.shape[0]-1, orient=tkinter.HORIZONTAL)
+            slider = ctk.CTkSlider(img_option_frame, from_=0, to=image.shape[0]-1)
         elif (axis == "y"):
-            slider = tkinter.Scale(window, from_=0, to=image.shape[1]-1, orient=tkinter.HORIZONTAL)
+            slider = ctk.CTkSlider(img_option_frame, from_=0, to=image.shape[1]-1)
         elif (axis == "z"):
-            slider = tkinter.Scale(window, from_=0, to=image.shape[2]-1, orient=tkinter.HORIZONTAL)
-        slider.place(x=10, y=185, anchor="w")
+            slider = ctk.CTkSlider(img_option_frame, from_=0, to=image.shape[2]-1)
+        slider.place(relx=0.5, y=100, anchor="c")
 
         #Slider Entry
         def set_slider_value():
@@ -76,26 +79,26 @@ def display_image():
             slider.set(value)
             update_image()
 
-        slider_value_entry = tkinter.Entry(window, validate="key")
+        slider_value_entry = ctk.CTkEntry(img_option_frame, validate="key")
         slider_value_entry.configure(validatecommand=(window.register(on_validate_int), '%P'))
-        slider_value_entry.place(x=150, y=192.5, anchor="w")
-        set_value_button = tkinter.Button(window, text="Go", command=set_slider_value)
-        set_value_button.place(x=280, y=192.5, anchor="w")
+        slider_value_entry.place(relx=0.49, y=140, anchor="e")
+        set_value_button = ctk.CTkButton(img_option_frame, text="Go", command=set_slider_value)
+        set_value_button.place(relx=0.51, y=140, anchor="w")
 
         def update_image(*args):
             global axis_value
             if (axis == "x"):
-                x = slider.get()
+                x = int(slider.get())
                 axis_value = x
                 ax.imshow(image [x,:,:])
                 canvas_widget.draw()
             elif (axis == "y"):
-                y = slider.get()
+                y = int(slider.get())
                 axis_value = y
                 ax.imshow(image [:,y,:])
                 canvas_widget.draw()
             elif (axis == "z"):
-                z = slider.get()
+                z = int(slider.get())
                 axis_value = z
                 ax.imshow(image [:,:,z])
                 canvas_widget.draw()
@@ -130,19 +133,20 @@ def option_clicked():
 
     if selected_option == "k-means":
         k_form(file_path, axis, axis_value)
-    
+
+
 def on_closing():
     window.destroy()
-#GUI
+    window.quit()
 
-window = tkinter.Tk()
-window.protocol("WM_DELETE_WINDOW", on_closing)
+ctk.set_appearance_mode("light")
+ctk.set_default_color_theme("dark-blue")
+ctk.deactivate_automatic_dpi_awareness()
+window = ctk.CTk()
 window.title("Image Procesing App")
 
-#Get screen dimensions
 screen_width = 1920
 screen_height = 1080
-print(screen_height, screen_width)
 #Set window dimensions
 window_width = int(screen_width * 0.7)
 window_height = int(screen_height*0.6)
@@ -151,55 +155,73 @@ x = int(screen_width*0.2)
 y = int(screen_height*0.2)
 window.geometry(f"{window_width}x{window_height}+{x}+{y}")
 
-# Variable to store the selected option of the radio buttons
-option = tkinter.StringVar(value="original")
+#Variable to store the selected option of the radio buttons
+option = ctk.StringVar(value="original")
+
+#Frames
+welcome_frame = ctk.CTkFrame(master=window, width=window_width/2,height=110 )
+img_option_frame = ctk.CTkFrame(master=window, width= window_width/3, height=210)
+radiobutton_frame = ctk.CTkFrame(master=window, width= window_width/4, height=250)
 
 #Labels
-color_label = tkinter.Label(window, bg="red", height=2, width=window_width)
-welcome_label = tkinter.Label(window, text="Welcome to this image processing App", font=("Times New Roman", 17, "bold"))
-selected_file_label = tkinter.Label(window)
-files_label = tkinter.Label(window, text="Files Loaded: ", font=("Times New Roman", 15, "bold"))
-axis_label = tkinter.Label(window, text="Axis: ", font=("Times New Roman", 15, "bold"))
-segmentation_label = tkinter.Label(window, text="Choose your segmentation method: ", font=("Times New Roman", 16, "bold"))
+welcome_label = ctk.CTkLabel(welcome_frame, text="Welcome to this image processing App", text_color="blue", font=("Times New Roman", 25, "bold"))
+selected_file_label = ctk.CTkLabel(welcome_frame, text="")
+files_label = ctk.CTkLabel(img_option_frame, text="Files Loaded: ", font=("Times New Roman", 20, "bold"))
+axis_label = ctk.CTkLabel(img_option_frame, text="Axis: ", font=("Times New Roman", 20, "bold"))
+segmentation_label = ctk.CTkLabel(master=radiobutton_frame, text="Choose your segmentation method: ", font=("Times New Roman", 16, "bold"))
+
+#animated widget
+sidebar = SlidePanel(window, 0,-0.2)
+
+#Load Image for button
+sidebar_img = ctk.CTkImage(light_image=Image.open("Image/sidebar.png"),dark_image=Image.open("Image/sidebar.png"),size=(50,50))
 
 #Buttons
-browse_button = tkinter.Button(window, text="Browse", width=10, height=1, command=browse_file)
-show_img_button = tkinter.Button(window, text="Show Image", width=40 ,command= display_image)
-apply_button = tkinter.Button(window, text="Apply", width=40, height=2,command = option_clicked)
+browse_button = ctk.CTkButton(welcome_frame, text="Browse Image", fg_color="red", width=40, height=28, command=browse_file)
+show_img_button = ctk.CTkButton(img_option_frame, text="Show Image", width=40 ,command= display_image)
+apply_button = ctk.CTkButton(master=radiobutton_frame, text="Apply Method", width=40,command = option_clicked)
+sidebar_button = ctk.CTkButton(window, width=50,text="", image=sidebar_img, command=sidebar.animate, fg_color="transparent", hover_color="lightgray", anchor="w")
 
 #Radio Buttons
-thresholding_button = tkinter.Radiobutton(window, text="Thresholding", variable = option, value="thresholding")
-thresholding_button.config(font=("Times New Roman", 16), padx=10, pady=10)
-reg_growing_button = tkinter.Radiobutton(window, text="Region Growing", variable = option, value="region growing")
-reg_growing_button.config(font=("Times New Roman", 16), padx=10, pady=10)
-k_means_button = tkinter.Radiobutton(window, text="K-means", variable = option, value="k-means")
-k_means_button.config(font=("Times New Roman", 16), padx=10, pady=10)
+
+thresholding_button = ctk.CTkRadioButton(master=radiobutton_frame, text="Thresholding", variable = option, value="thresholding")
+thresholding_button.configure(font=("Times New Roman", 16))
+reg_growing_button = ctk.CTkRadioButton(master=radiobutton_frame, text="Region Growing", variable = option, value="region growing")
+reg_growing_button.configure(font=("Times New Roman", 16))
+k_means_button = ctk.CTkRadioButton(master=radiobutton_frame, text="K-means", variable = option, value="k-means")
+k_means_button.configure(font=("Times New Roman", 16))
 
 #Canvas
 canvas = tkinter.Canvas(window, width=window_width/4, height=window_height/4)
 
 #Combo Box
 path_list = []
-paths_combobox = ttk.Combobox(window, width=30, height=3)
+paths_combobox = ctk.CTkComboBox(img_option_frame, width=200, height=5, state="readonly")
 axis_list = ["x","y","z"]
-axis_combobox = ttk.Combobox(window, width=30, height=3, values=axis_list)
-
+axis_combobox = ctk.CTkComboBox(img_option_frame, width=200, height=5, values=axis_list, state="readonly")
 
 #Pack
-color_label.place(x=window_width/2 , y=0,  anchor="n")
-welcome_label.place(x=window_width/2 , y=10,  anchor="n")
-browse_button.place(x=window_width/2, y= 60, anchor="n")
-selected_file_label.place(x=window_width/2, y = 90, anchor="n")
-canvas.place(x=window_width/2, y=120, anchor="nw")
-files_label.place(x=10, y=128, anchor="w")
-paths_combobox.place(x=240, y=120, anchor="n")
-axis_label.place(x=10, y=158, anchor="w")
-axis_combobox.place(x=240, y=150, anchor="n")
-show_img_button.place(x=180, y = 220, anchor="n")
-segmentation_label.place(x=10, y= 270, anchor="w")
-thresholding_button.place(x=10, y=330, anchor="w" )
-reg_growing_button.place(x=10, y=370, anchor="w")
-k_means_button.place(x=10, y=410, anchor="w")
-apply_button.place(x=180, y = 580, anchor="n")
+sidebar_button.place(relx=0,rely=0, anchor="nw")
+#Welcome Frame
+welcome_frame.place(relx=0.5, rely=0.01, anchor="n")
+welcome_label.place(relx=0.5 , y=5,  anchor="n")
+browse_button.place(relx=0.5, y= 50, anchor = "n")
+selected_file_label.place(relx=0.5, y=75,  anchor="n")
+#Canvas
+canvas.place(relx=0.5, rely=0.2, anchor="nw")
+#File Selector Frame
+img_option_frame.place(relx=0.25, rely=0.2, anchor="n")
+files_label.place(relx=0.05, y=20, anchor="w")
+paths_combobox.place(relx=0.35, y=20, anchor="w")
+axis_label.place(relx=0.05, y=50, anchor="w")
+axis_combobox.place(relx=0.35, y=50, anchor="w")
+show_img_button.place(relx=0.5, y = 180, anchor="c")
+#Processing Methods Frame
+radiobutton_frame.place(relx=0.25, rely=0.75, anchor="c")
+segmentation_label.place(x=10, y= 20, anchor="w")
+thresholding_button.place(x=10, y=60, anchor="w")
+reg_growing_button.place(x=10, y=100, anchor="w")
+k_means_button.place(x=10, y=140, anchor="w")
+apply_button.place(x=160, y = 200, anchor="n")
 
 window.mainloop()
