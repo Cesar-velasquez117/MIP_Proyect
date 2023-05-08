@@ -1,42 +1,16 @@
 import tkinter
 import customtkinter as ctk
-from tkinter import filedialog, ttk
-import os
 import nibabel as nib
-from PIL import Image
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from Algorithms.thresholding import thresholding_form
-from Algorithms.k_means import k_form
-from Algorithms.region_growing import region_form
-from Classes.SlidePanel import SlidePanel
-
+from Algorithms.methods import k_form, region_form, thresholding_form
+from utils.helper import add_sidebar, on_validate_int, browse_file, processing, on_closing
 
 #FUNCTIONS
-def browse_file():
-    file_path = filedialog.askopenfilename()
-    if file_path:
-      selected_file_label.configure(text=file_path)
-      path_list.append(file_path)
-      #Updates the values in the Combo box
-      paths_combobox.configure(values=path_list)
 
 canvas_widget = None
 axis = ""
 axis_value = 0
-
-def is_int(s):
-    try:
-        int(s)
-        return True
-    except ValueError:
-        return False
-
-def on_validate_int(new_value):
-    if new_value.strip() == "":
-        return True
-    return is_int(new_value)
-
 
 def display_image():
     global canvas_widget
@@ -45,7 +19,6 @@ def display_image():
         image_data=nib.load(file_path)
         image = image_data.get_fdata()
         canvas.delete("all")
-        filename = os.path.basename(file_path)
 
         #Slider 
         global axis
@@ -134,16 +107,13 @@ def option_clicked():
     if selected_option == "k-means":
         k_form(file_path, axis, axis_value)
 
-
-def on_closing():
-    window.destroy()
-    window.quit()
-
+#Processing GUI
 ctk.set_appearance_mode("light")
 ctk.set_default_color_theme("dark-blue")
 ctk.deactivate_automatic_dpi_awareness()
 window = ctk.CTk()
 window.title("Image Procesing App")
+window.protocol("WM_DELETE_WINDOW", lambda: on_closing(window))
 
 screen_width = 1920
 screen_height = 1080
@@ -170,17 +140,10 @@ files_label = ctk.CTkLabel(img_option_frame, text="Files Loaded: ", font=("Times
 axis_label = ctk.CTkLabel(img_option_frame, text="Axis: ", font=("Times New Roman", 20, "bold"))
 segmentation_label = ctk.CTkLabel(master=radiobutton_frame, text="Choose your segmentation method: ", font=("Times New Roman", 16, "bold"))
 
-#animated widget
-sidebar = SlidePanel(window, 0,-0.2)
-
-#Load Image for button
-sidebar_img = ctk.CTkImage(light_image=Image.open("Image/sidebar.png"),dark_image=Image.open("Image/sidebar.png"),size=(50,50))
-
 #Buttons
-browse_button = ctk.CTkButton(welcome_frame, text="Browse Image", fg_color="red", width=40, height=28, command=browse_file)
+browse_button = ctk.CTkButton(welcome_frame, text="Browse Image", fg_color="red", width=40, height=28, command=lambda: browse_file(selected_file_label, path_list, paths_combobox))
 show_img_button = ctk.CTkButton(img_option_frame, text="Show Image", width=40 ,command= display_image)
 apply_button = ctk.CTkButton(master=radiobutton_frame, text="Apply Method", width=40,command = option_clicked)
-sidebar_button = ctk.CTkButton(window, width=50,text="", image=sidebar_img, command=sidebar.animate, fg_color="transparent", hover_color="lightgray", anchor="w")
 
 #Radio Buttons
 
@@ -201,7 +164,6 @@ axis_list = ["x","y","z"]
 axis_combobox = ctk.CTkComboBox(img_option_frame, width=200, height=5, values=axis_list, state="readonly")
 
 #Pack
-sidebar_button.place(relx=0,rely=0, anchor="nw")
 #Welcome Frame
 welcome_frame.place(relx=0.5, rely=0.01, anchor="n")
 welcome_label.place(relx=0.5 , y=5,  anchor="n")
@@ -224,4 +186,29 @@ reg_growing_button.place(x=10, y=100, anchor="w")
 k_means_button.place(x=10, y=140, anchor="w")
 apply_button.place(x=160, y = 200, anchor="n")
 
+#GUI Preprocessing
+window2 = ctk.CTkToplevel()
+window2.title("Prepocessing")
+window2.protocol("WM_DELETE_WINDOW", lambda: on_closing(window))
+#Set window dimensions
+window_width2 = int(screen_width * 0.5)
+window_height2 = int(screen_height*0.6)
+#Position
+x = int(screen_width*0.25)
+y = int(screen_height*0.25)
+window2.geometry(f"{window_width2}x{window_height2}+{x}+{y}")
+
+#Button
+processing_button = ctk.CTkButton(window2, text="Go to Processing options", width=140, height=30, command=lambda: processing(window, window2))
+#Pack
+processing_button.place(relx=0.5, rely=0.5, anchor="c")
+
+window.withdraw()
+
+#Sidebar for window
+add_sidebar(window, window2)
+#Sidebar for window2
+add_sidebar(window2, window)
+
 window.mainloop()
+
