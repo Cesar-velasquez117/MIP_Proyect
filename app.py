@@ -129,7 +129,7 @@ def option_clicked():
         thresholding_form(file_path, axis, axis_value)
     
     if selected_option == "region growing":
-        region_form(file_path)
+        region_form(file_path, axis, axis_value)
 
     if selected_option == "k-means":
         k_form(file_path, axis, axis_value)

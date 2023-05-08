@@ -1,6 +1,7 @@
 import nibabel as nib
 import numpy as np
 import matplotlib.pyplot as plt
+import customtkinter as ctk
 import tkinter
 
 def threshold_img(path, tolerance, tau, axis, axis_value):
@@ -54,7 +55,7 @@ def thresholding_form(path, axis, axis_value):
         tolerance_entry.delete(0, tkinter.END)
         top.destroy()
     #GUI
-    top = tkinter.Toplevel()
+    top = ctk.CTkToplevel()
     top.title("Thresholding Form")
     top.grab_set() #Block the main window
     top.protocol("WM_DELETE_WINDOW", lambda: top.destroy())
@@ -69,27 +70,31 @@ def thresholding_form(path, axis, axis_value):
     top_y = int(screen_height/4)
     top.geometry(f"{top_width}x{top_height}+{top_x}+{top_y}")
 
+    #Frame
+    form_frame = ctk.CTkFrame(top, width=top_width*0.8, height=top_height*0.8)
+
     #Label
-    title_label = tkinter.Label(top, text="Thresholding Form", font=("Times New Roman", 15, "bold"))
-    tolerance_label = tkinter.Label(top, text="Tolerance: ", font=("Times New Roman", 15, "bold"))
-    tau_label = tkinter.Label(top, text="Tau: ", font=("Times New Roman", 15, "bold"))
+    title_label = ctk.CTkLabel(form_frame, text="Thresholding Form", font=("Times New Roman", 20, "bold"))
+    tolerance_label = ctk.CTkLabel(form_frame, text="Tolerance: ", font=("Times New Roman", 20, "bold"))
+    tau_label = ctk.CTkLabel(form_frame, text="Tau: ", font=("Times New Roman", 20, "bold"))
 
     #Textfield
-    tolerance_entry = tkinter.Entry(top, width=20, text="tolerance", validate="key")
+    tolerance_entry = ctk.CTkEntry(form_frame, width=140, validate="key")
     tolerance_entry.configure(validatecommand=(top.register(on_validate_float), '%P'))
-    tau_entry = tkinter.Entry(top, width=20, text="tau",validate="key")
+    tau_entry = ctk.CTkEntry(form_frame, width=140, validate="key")
     tau_entry.configure(validatecommand=(top.register(on_validate_float), '%P'))
 
     #Button
-    finish_button = tkinter.Button(top, text="Finish Form", width=20, height=2, command=finish_form)
+    finish_button = ctk.CTkButton(form_frame, text="Finish Form", width=50, height=30, command=finish_form)
 
     #Pack
-    title_label.place(x=top_width/2, y=10, anchor="n")
-    tolerance_label.place(x=top_width*0.1, y=70, anchor="w")
-    tau_label.place(x=top_width*0.1, y=100, anchor="w")
-    tolerance_entry.place(x=top_width*0.4, y=70, anchor="w")
-    tau_entry.place(x=top_width*0.4, y=100, anchor="w")
-    finish_button.place(x=top_width/2, y= 200, anchor="n")
+    form_frame.place(relx=0.5, rely=0.5, anchor="c")
+    title_label.place(relx=0.5, rely=0.1, anchor="n")
+    tolerance_label.place(relx=0.2, rely=0.4, anchor="w")
+    tau_label.place(relx=0.2, rely=0.6, anchor="w")
+    tolerance_entry.place(relx=0.5, rely=0.4, anchor="w")
+    tau_entry.place(relx=0.5, rely=0.6, anchor="w")
+    finish_button.place(relx=0.5, rely= 0.85, anchor="n")
 
     top.mainloop()
 

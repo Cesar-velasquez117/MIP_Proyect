@@ -1,6 +1,7 @@
 import nibabel as nib
 import numpy as np
 import matplotlib.pyplot as plt
+import customtkinter as ctk
 import tkinter
 
 def k_img(path,tolerance, iterations, k, axis, axis_value):
@@ -76,7 +77,7 @@ def k_form(path, axis, axis_value):
         k_entry.delete(0, tkinter.END)
         top.destroy()
     #GUI
-    top = tkinter.Toplevel()
+    top = ctk.CTkToplevel()
     top.title("K-Means Form")
     top.grab_set() #Block the main window
     top.protocol("WM_DELETE_WINDOW", lambda: top.destroy())
@@ -91,32 +92,36 @@ def k_form(path, axis, axis_value):
     top_y = int(screen_height/4)
     top.geometry(f"{top_width}x{top_height}+{top_x}+{top_y}")
 
+    #Frame
+    form_frame = ctk.CTkFrame(top, width=top_width*0.8, height=top_height*0.8)
+
     #Label
-    title_label = tkinter.Label(top, text="K-Means Form", font=("Times New Roman", 15, "bold"))
-    tolerance_label = tkinter.Label(top, text="Tolerance: ", font=("Times New Roman", 15, "bold"))
-    iteration_label = tkinter.Label(top, text="# Iterations: ", font=("Times New Roman", 15, "bold"))
-    k_label = tkinter.Label(top, text="# K's: ", font=("Times New Roman", 15, "bold"))
+    title_label = ctk.CTkLabel(form_frame, text="K-Means Form", font=("Times New Roman", 20, "bold"))
+    tolerance_label = ctk.CTkLabel(form_frame, text="Tolerance: ", font=("Times New Roman", 20, "bold"))
+    iteration_label = ctk.CTkLabel(form_frame, text="# Iterations: ", font=("Times New Roman", 20, "bold"))
+    k_label = ctk.CTkLabel(form_frame, text="# K's: ", font=("Times New Roman", 20, "bold"))
 
     #Textfield
-    tolerance_entry = tkinter.Entry(top, width=20, validate="key")
+    tolerance_entry = ctk.CTkEntry(form_frame, width=140, validate="key")
     tolerance_entry.configure(validatecommand=(top.register(on_validate_float), '%P'))
-    iteration_entry = tkinter.Entry(top, width=10, validate="key")
+    iteration_entry = ctk.CTkEntry(form_frame, width=140, validate="key")
     iteration_entry.configure(validatecommand=(top.register(on_validate_int), '%P'))
-    k_entry = tkinter.Entry(top, width=10,validate="key")
+    k_entry = ctk.CTkEntry(form_frame, width=140,validate="key")
     k_entry.configure(validatecommand=(top.register(on_validate_int), '%P'))
 
     #Button
-    finish_button = tkinter.Button(top, text="Finish Form", width=20, height=2, command=finish_form)
+    finish_button = ctk.CTkButton(form_frame, text="Finish Form", width=50, height=30, command=finish_form)
 
     #Pack
-    title_label.place(x=top_width/2, y=10, anchor="n")
-    tolerance_label.place(x=top_width*0.1, y=70, anchor="w")
-    iteration_label.place(x=top_width*0.1, y=100, anchor="w")
-    k_label.place(x=top_width*0.1, y=130, anchor="w")
-    tolerance_entry.place(x=top_width*0.4, y=70, anchor="w")
-    iteration_entry.place(x=top_width*0.4, y=100, anchor="w")
-    k_entry.place(x=top_width*0.4, y=130, anchor="w")
-    finish_button.place(x=top_width/2, y= 200, anchor="n")
+    form_frame.place(relx=0.5, rely=0.5, anchor="c")
+    title_label.place(relx=0.5, rely=0.1, anchor="n")
+    tolerance_label.place(relx=0.2, rely=0.3, anchor="w")
+    iteration_label.place(relx=0.2, rely=0.5, anchor="w")
+    k_label.place(relx=0.2, rely=0.7, anchor="w")
+    tolerance_entry.place(relx=0.5, rely=0.3, anchor="w")
+    iteration_entry.place(relx=0.5, rely=0.5, anchor="w")
+    k_entry.place(relx=0.5, rely=0.7, anchor="w")
+    finish_button.place(relx=0.5, rely= 0.85, anchor="n")
 
     top.mainloop()
 
