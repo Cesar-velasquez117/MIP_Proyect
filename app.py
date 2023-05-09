@@ -4,7 +4,7 @@ import nibabel as nib
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from Algorithms.methods import k_form, region_form, thresholding_form
-from utils.helper import add_sidebar, on_validate_int, browse_file, on_closing
+from utils.helper import add_sidebar, on_validate_int, browse_file, on_closing, method_clicked
 
 #FUNCTIONS
 
@@ -106,6 +106,8 @@ def option_clicked():
 
     if selected_option == "k-means":
         k_form(file_path, axis, axis_value)
+
+
 
 #Processing GUI
 ctk.set_appearance_mode("light")
@@ -211,6 +213,8 @@ standarization_option = ctk.StringVar()
 noise_option = ctk.StringVar()
 #Buttons
 browse_button = ctk.CTkButton(browse_frame, text="Browse Image", width=40, height=28, command=lambda: browse_file(selected_file_label2, path_list, paths_combobox, paths_combobox2))
+standarization_button = ctk.CTkButton(standarization_frame, text="Show Histogram", width=40, height=28, command=lambda: method_clicked(standarization_option,paths_combobox2,canvas2))
+noise_button = ctk.CTkButton(noise_frame, text="Show Image", width=40, height=28)
 
 #Radio Buttons
 rescaling_button = ctk.CTkRadioButton(standarization_frame, text="Rescaling", variable = standarization_option, value="rescaling", font=("Times New Roman", 16))
@@ -219,8 +223,11 @@ white_stripe_button = ctk.CTkRadioButton(standarization_frame, text="White Strip
 pair_button = ctk.CTkRadioButton(standarization_frame, text="Histogram matching", variable=standarization_option,value="Histogram Matching", font=("Times New Roman", 16))
 mean_button = ctk.CTkRadioButton(noise_frame, text="Mean Filter", variable=noise_option, value="mean-filter", font=("Times New Roman", 16))
 median_button = ctk.CTkRadioButton(noise_frame, text="Median Filter", variable=noise_option, value="median-filter", font=("Times New Roman", 16))
+edge_button = ctk.CTkRadioButton(noise_frame, text="Edge filter", variable=noise_option, value="edge-filter", font=("Times New Roman", 16))
 #ComboBox
 paths_combobox2 = ctk.CTkComboBox(select_frame, width=200, state="readonly")
+#Canvas
+canvas2 = tkinter.Canvas(window2, width=window_width/4, height=window_height/4)
 
 #Pack
 #Browse-Frame
@@ -229,6 +236,8 @@ browse_label.place(relx=0.5 , y=5,  anchor="n")
 note_label.place(relx=0.5, y=35, anchor="n")
 browse_button.place(relx=0.5, y=80, anchor="c")
 selected_file_label2.place(relx=0.5, y=90,  anchor="n")
+#Canvas
+canvas2.place(relx=0.3, rely=0.6, anchor="c")
 #Select-Frame
 select_frame.place(relx=0.75, rely=0.3, anchor="c")
 choose_file_label.place(relx=0.1, rely=0.25, anchor="w")
@@ -240,11 +249,14 @@ rescaling_button.place(relx=0.1, rely= 0.2, anchor="w")
 z_score_button.place(relx=0.1, rely= 0.35, anchor="w")
 white_stripe_button.place(relx=0.1, rely= 0.5, anchor="w")
 pair_button.place(relx=0.1, rely= 0.65, anchor="w")
+standarization_button.place(relx=0.5, rely=0.9, anchor="c")
 #Noise-Frame
 noise_frame.place(relx=0.84, rely=0.45, anchor="n")
 noise_label.place(relx=0.5, rely=0.05, anchor="n")
 mean_button.place(relx=0.1, rely=0.2, anchor="w")
 median_button.place(relx=0.1, rely= 0.35, anchor="w")
+edge_button.place(relx=0.1, rely=0.5, anchor="w")
+noise_button.place(relx=0.5, rely=0.9, anchor="c")
 
 window2.withdraw()
 

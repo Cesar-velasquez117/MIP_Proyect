@@ -2,6 +2,7 @@ import customtkinter as ctk
 from tkinter import filedialog
 from PIL import Image
 from Classes.SlidePanel import SlidePanel
+from Standarization.standarization import rescaling, zscore, white_stripe
 
 #Function to add the sidebar to the window
 def add_sidebar(window, window2):
@@ -68,3 +69,15 @@ def processing(window, window2):
 def on_closing(window):
     window.destroy()
     window.quit()
+
+#Function to show the histogram with the selected standarization method
+def method_clicked(option,combobox,canva):
+    selected_option = option.get()
+    file_path = combobox.get()
+    if selected_option == "rescaling":
+        rescaling(file_path, canva)
+    if selected_option == "z-score":
+        zscore(file_path, canva)
+    if selected_option == "white-stripe":
+        white_stripe(file_path, canva)
+    
