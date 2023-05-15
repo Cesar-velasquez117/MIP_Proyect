@@ -3,7 +3,7 @@ import customtkinter as ctk
 import nibabel as nib
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from utils.helper import add_sidebar, on_validate_int, browse_file, on_closing, method_clicked, denoise_clicked, option_clicked
+from utils.helper import add_sidebar, on_validate_int, browse_file, on_closing, method_clicked, denoise_clicked, option_clicked, borders
 from utils.globals import *
 from Preprocessing.methods import set_image, get_updated_image, get_updated_ax
 
@@ -96,6 +96,94 @@ def display_image():
         canvas_widget.figure = fig
         canvas_widget.draw()
 
+def display_borders():
+    global canvas_widget, fig, ax, image, ax2, fig2
+    image = get_updated_image()
+    border = borders(image)
+    fig2,ax2 = get_updated_ax()
+    if ax2 is not None:
+        ax2.clear()
+
+    canvas.delete("all")
+
+    #Slider 
+    global axis
+    axis = axis_combobox.get()
+    if (axis == "x"):
+        slider = ctk.CTkSlider(img_option_frame, from_=0, to=border.shape[0]-1)
+    elif (axis == "y"):
+        slider = ctk.CTkSlider(img_option_frame, from_=0, to=border.shape[1]-1)
+    elif (axis == "z"):
+        slider = ctk.CTkSlider(img_option_frame, from_=0, to=border.shape[2]-1)
+    slider.set(0)
+    slider.place(relx=0.5, y=100, anchor="c")
+
+    #Slider Entry
+    def set_slider_value():
+        value = int(slider_value_entry.get())
+        if axis == "x":
+            if value < 0:
+                value = 0
+            elif value >= border.shape[0]:
+                value = border.shape[0] - 1
+        elif axis == "y":
+            if value < 0:
+                value = 0
+            elif value >= border.shape[1]:
+                value = border.shape[1] - 1
+        elif axis == "z":
+            if value < 0:
+                value = 0
+            elif value >= border.shape[2]:
+                value = border.shape[2] - 1
+        slider.set(value)
+        update_image()
+
+    slider_value_entry = ctk.CTkEntry(img_option_frame, validate="key")
+    slider_value_entry.configure(validatecommand=(window.register(on_validate_int), '%P'))
+    slider_value_entry.place(relx=0.49, y=140, anchor="e")
+    set_value_button = ctk.CTkButton(img_option_frame, text="Go", command=set_slider_value)
+    set_value_button.place(relx=0.51, y=140, anchor="w")
+
+    def update_image(*args):
+        global axis_value
+        if (axis == "x"):
+            x = int(slider.get())
+            axis_value = x
+            ax.imshow(border[x,:,:])
+            canvas_widget.draw()
+        elif (axis == "y"):
+            y = int(slider.get())
+            axis_value = y
+            ax.imshow(border[:,y,:])
+            canvas_widget.draw()
+        elif (axis == "z"):
+            z = int(slider.get())
+            axis_value = z
+            ax.imshow(border[:,:,z])
+            canvas_widget.draw()
+        
+    slider.bind("<B1-Motion>", update_image)
+
+    if fig is None:
+        fig, ax= plt.subplots()
+    else:
+        ax.clear()
+        
+    if (axis == "x"):
+        ax.imshow(border[0,:,:])
+    elif (axis == "y"):
+        ax.imshow(border[:,0,:])
+    elif (axis == "z"):
+        ax.imshow(border[:,:,0])
+        
+    if canvas_widget is None:
+        canvas_widget = FigureCanvasTkAgg(fig,canvas)
+        canvas_widget.get_tk_widget().pack()
+    else:    
+        canvas_widget.figure = fig
+        canvas_widget.draw()
+
 #Processing GUI
 ctk.set_appearance_mode("light")
 ctk.set_default_color_theme("dark-blue")
@@ -134,6 +222,7 @@ browse_button = ctk.CTkButton(welcome_frame, text="Browse Image", width=40, heig
 show_img_button = ctk.CTkButton(img_option_frame, text="Show Image", width=40 ,command= display_image)
 apply_button = ctk.CTkButton(master=radiobutton_frame, text="Apply Method", width=40,command = lambda: option_clicked(get_updated_image(), option, axis,axis_value))
 set_button = ctk.CTkButton(img_option_frame, text="Set",width=70,command=lambda: set_image(paths_combobox.get(), selected_file_label, selected_file_label2))
+show_border_button = ctk.CTkButton(img_option_frame, text="Show Borders", width=40, command= display_borders)
 
 #Radio Buttons
 
@@ -169,7 +258,8 @@ paths_combobox.place(relx=0.35, y=20, anchor="w")
 set_button.place(relx=0.8, y = 20, anchor="w")
 axis_label.place(relx=0.05, y=60, anchor="w")
 axis_combobox.place(relx=0.35, y=60, anchor="w")
-show_img_button.place(relx=0.5, y = 180, anchor="c")
+show_img_button.place(relx=0.49, y = 180, anchor="e")
+show_border_button.place(relx=0.51, y=180, anchor="w")
 #Processing Methods Frame
 radiobutton_frame.place(relx=0.25, rely=0.75, anchor="c")
 segmentation_label.place(x=10, y= 20, anchor="w")

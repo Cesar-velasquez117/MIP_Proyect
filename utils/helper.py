@@ -1,4 +1,5 @@
 import customtkinter as ctk
+import numpy as np
 from tkinter import filedialog
 from PIL import Image
 from Classes.SlidePanel import SlidePanel
@@ -104,3 +105,16 @@ def denoise_clicked(option, combobox2,canva,window):
     if selected_option == "edge-filte":
         edge_filter(canva, axis, window)
 
+def borders(image):
+    dfdx = np.zeros_like(image)
+    dfdy = np.zeros_like(image)
+    dfdz = np.zeros_like(image)
+    for x in range(1, image.shape[0]-2) :
+        for y in range(1, image.shape[1]-2) :
+            for z in range(1, image.shape[2]-2) :
+                dfdx[x, y, z] = image[x+1, y, z]-image[x-1, y, z]
+                dfdy[x, y, z] = image[x, y+1, z]-image[x, y-1, z]
+                dfdz[x, y, z] = image[x, y, z+1]-image[x, y, z-1]
+    
+    magnitud = np.sqrt(np.power(dfdx, 2) + np.power(dfdy, 2) + np.power(dfdz, 2))
+    return magnitud
