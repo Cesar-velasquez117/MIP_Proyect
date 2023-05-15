@@ -1,5 +1,5 @@
 # MIP Proyect
-Assignment for the asignature Image Processing
+Assignment for the asignature Introducto to Image Processing
 
 ## Dependencies
 To run this app correctly you will need to have python installed.
