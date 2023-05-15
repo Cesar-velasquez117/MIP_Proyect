@@ -1,0 +1,12 @@
+canvas_widget2=None
+canvas_widget = None
+axis = ""
+axis_value = 0
+fig, ax = None, None
+fig2, ax2, ax3 = None, None, None
+slider2 = None
+slider_value_entry2 = None
+set_value_button2 = None
+axis2 = ""
+axis_value2 = 0
+image=None

@@ -2,7 +2,8 @@ import customtkinter as ctk
 from tkinter import filedialog
 from PIL import Image
 from Classes.SlidePanel import SlidePanel
-from Standarization.standarization import rescaling, zscore, white_stripe
+from Preprocessing.methods import rescaling, zscore, white_stripe, mean_filter, median_filter, edge_filter, hist_matching
+from Algorithms.methods import k_form, region_form, thresholding_form
 
 #Function to add the sidebar to the window
 def add_sidebar(window, window2):
@@ -46,7 +47,7 @@ def on_validate_float(new_value):
 
 #Function to browse the image_file
 def browse_file(label, list, combobox, combobox2):
-    file_path = filedialog.askopenfilename()
+    file_path = filedialog.askopenfilename(filetypes=[("NIfTI files", "*.nii.gz")])
     if file_path:
       if file_path not in list:
           label.configure(text=file_path)
@@ -70,14 +71,36 @@ def on_closing(window):
     window.destroy()
     window.quit()
 
-#Function to show the histogram with the selected standarization method
-def method_clicked(option,combobox,canva):
+def option_clicked(image, option, axis, axis_value):
     selected_option = option.get()
-    file_path = combobox.get()
-    if selected_option == "rescaling":
-        rescaling(file_path, canva)
-    if selected_option == "z-score":
-        zscore(file_path, canva)
-    if selected_option == "white-stripe":
-        white_stripe(file_path, canva)
+    if selected_option == "thresholding":
+        thresholding_form(image, axis, axis_value)
     
+    if selected_option == "region growing":
+        region_form(image, axis, axis_value)
+
+    if selected_option == "k-means":
+        k_form(image, axis, axis_value)
+
+#Function to show the histogram with the selected standarization method
+def method_clicked(option,canva):
+    selected_option = option.get()
+    if selected_option == "rescaling":
+        rescaling(canva)
+    if selected_option == "z-score":
+        zscore(canva)
+    if selected_option == "white-stripe":
+        white_stripe(canva)
+    if selected_option == "histogram-matching":
+        hist_matching(canva)
+    
+def denoise_clicked(option, combobox2,canva,window):
+    selected_option = option.get()
+    axis = combobox2.get()
+    if selected_option == "mean-filter":
+        mean_filter(canva,axis,window)
+    if selected_option == "median-filter":
+        median_filter(canva, axis, window)
+    if selected_option == "edge-filte":
+        edge_filter(canva, axis, window)
+

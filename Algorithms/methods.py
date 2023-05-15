@@ -1,15 +1,36 @@
-import nibabel as nib
+
 import numpy as np
 import matplotlib.pyplot as plt
 import customtkinter as ctk
 import tkinter
-from utils.helper import on_validate_int, on_validate_float
+
+#Auxiliary Functions
+def is_int(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
+#Function to validate if the digit typed is an integer
+def on_validate_int(new_value):
+    if new_value.strip() == "":
+        return True
+    return is_int(new_value)
+
+def is_float(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+#Function to validate if the digit typed is a float
+def on_validate_float(new_value):
+    if new_value.strip() == "":
+        return True
+    return is_float(new_value)
 
 #K-Means algorithm
-def k_img(path,tolerance, iterations, k, axis, axis_value):
-    image_data = nib.load(path)
-    image = image_data.get_fdata()
-
+def k_img(image,tolerance, iterations, k, axis, axis_value):
     # initialize centroids
     centroids = np.random.choice(image.flatten(), k)
     centroids_old = centroids.copy()
@@ -41,14 +62,14 @@ def k_img(path,tolerance, iterations, k, axis, axis_value):
     # plt.hist(image.flatten(), 100)
     plt.show()
 
-def k_form(path, axis, axis_value):
+def k_form(image, axis, axis_value):
     #Gets the values for the thresholding algorithm
     def finish_form():
         tol=float(tolerance_entry.get())
         i=int(iteration_entry.get())
         k=int(k_entry.get())
 
-        k_img(path,tol,i,k,axis, axis_value)
+        k_img(image,tol,i,k,axis, axis_value)
 
         tolerance_entry.delete(0, tkinter.END)
         iteration_entry.delete(0, tkinter.END)
@@ -104,10 +125,7 @@ def k_form(path, axis, axis_value):
     top.mainloop()
 
 #Region Growing Algorithm
-def region_img(path, tolerance, origin_x, origin_y ,origin_z, axis, axis_value):
-    image_data = nib.load(path)
-    image = image_data.get_fdata()
-
+def region_img(image, tolerance, origin_x, origin_y ,origin_z, axis, axis_value):
     x = 1
     y = 1
     z = 1
@@ -154,7 +172,7 @@ def region_img(path, tolerance, origin_x, origin_y ,origin_z, axis, axis_value):
     #plt.hist(image.flatten(), 50)
     plt.show()
 
-def region_form(path, axis, axis_value):
+def region_form(image, axis, axis_value):
     #Gets the values for the thresholding algorithm
     def finish_form():
         tol=float(tolerance_entry.get())
@@ -162,7 +180,7 @@ def region_form(path, axis, axis_value):
         y = int(y_entry.get())
         z = int(z_entry.get())
 
-        region_img(path,tol,x,y,z,axis,axis_value)
+        region_img(image,tol,x,y,z,axis,axis_value)
 
         tolerance_entry.delete(0, tkinter.END)
         x_entry.delete(0, tkinter.END)
@@ -226,10 +244,7 @@ def region_form(path, axis, axis_value):
     top.mainloop()
 
 #Thresholding Algorithm
-def threshold_img(path, tolerance, tau, axis, axis_value):
-    image_data = nib.load(path)
-    image = image_data.get_fdata()
-
+def threshold_img(image, tolerance, tau, axis, axis_value):
     while True:
         segmentation = image >= tau
         mBG = image[np.multiply(image > 10, segmentation == 0)].mean()
@@ -253,13 +268,13 @@ def threshold_img(path, tolerance, tau, axis, axis_value):
     #plt.hist(image.flatten(), 50)
     plt.show()
 
-def thresholding_form(path, axis, axis_value):
+def thresholding_form(image, axis, axis_value):
     #Gets the values for the thresholding algorithm
     def finish_form():
         tau=float(tau_entry.get())
         tol=float(tolerance_entry.get())
 
-        threshold_img(path,tol,tau, axis, axis_value)
+        threshold_img(image,tol,tau, axis, axis_value)
 
         tau_entry.delete(0, tkinter.END)
         tolerance_entry.delete(0, tkinter.END)
