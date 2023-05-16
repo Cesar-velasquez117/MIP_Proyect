@@ -22,9 +22,11 @@ def get_updated_image():
     global image
     return image
 
-def get_updated_ax():
-    global fig2,ax2
-    return fig2,ax2
+def delete_fig():
+    global fig2
+    if fig2 is not None:
+        fig2.clf()
+        plt.close(fig2)
 #Auxiliary functions
 def load_image(file_path):
     filename = os.path.basename(file_path)

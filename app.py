@@ -5,17 +5,13 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from utils.helper import add_sidebar, on_validate_int, browse_file, on_closing, method_clicked, denoise_clicked, option_clicked, borders
 from utils.globals import *
-from Preprocessing.methods import set_image, get_updated_image, get_updated_ax
-
+from Preprocessing.methods import set_image, get_updated_image, delete_fig
 #FUNCTIONS
 
 def display_image():
-    global canvas_widget, fig, ax, image, ax2, fig2
+    global canvas_widget, fig, ax, image
     image = get_updated_image()
-    fig2,ax2 = get_updated_ax()
-    if ax2 is not None:
-        ax2.clear()
-
+    delete_fig()
     canvas.delete("all")
 
     #Slider 
@@ -97,12 +93,14 @@ def display_image():
         canvas_widget.draw()
 
 def display_borders():
-    global canvas_widget, fig, ax, image, ax2, fig2
+    global canvas_widget, fig, ax, image
     image = get_updated_image()
     border = borders(image)
-    fig2,ax2 = get_updated_ax()
-    if ax2 is not None:
-        ax2.clear()
+    delete_fig()
+    if ax is not None:
+        ax.clear()
+    if fig is not None:
+        fig.clear()
 
     canvas.delete("all")
 
