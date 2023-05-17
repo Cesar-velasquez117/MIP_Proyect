@@ -1,6 +1,7 @@
 import tkinter
 import customtkinter as ctk
 import nibabel as nib
+import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from utils.helper import add_sidebar, on_validate_int, browse_file, on_closing, method_clicked, denoise_clicked, option_clicked, borders
@@ -18,12 +19,12 @@ def display_image():
     global axis
     axis = axis_combobox.get()
     if (axis == "x"):
-        slider = ctk.CTkSlider(img_option_frame, from_=0, to=image.shape[0]-1)
+        slider = ctk.CTkSlider(img_option_frame, from_=np.min(image), to=image.shape[0]-1)
     elif (axis == "y"):
-        slider = ctk.CTkSlider(img_option_frame, from_=0, to=image.shape[1]-1)
+        slider = ctk.CTkSlider(img_option_frame, from_=np.min(image), to=image.shape[1]-1)
     elif (axis == "z"):
-        slider = ctk.CTkSlider(img_option_frame, from_=0, to=image.shape[2]-1)
-    slider.set(0)
+        slider = ctk.CTkSlider(img_option_frame, from_=np.min(image), to=image.shape[2]-1)
+    slider.set(np.min(image))
     slider.place(relx=0.5, y=100, anchor="c")
 
     #Slider Entry

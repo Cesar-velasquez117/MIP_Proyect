@@ -27,23 +27,6 @@ def delete_fig():
     if fig2 is not None:
         fig2.clf()
         plt.close(fig2)
-#Auxiliary functions
-def load_image(file_path):
-    filename = os.path.basename(file_path)
-    extension = os.path.splitext(filename)[0]
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # Ruta absoluta del directorio del script actual
-    if (extension == "FLAIR.nii"):
-        sample_image = nib.load(os.path.join(base_dir, "Image", "Base_Img", "FLAIR.nii.gz")).get_fdata()
-        # procesamiento para FLAIR
-    elif (extension == "IR.nii"):
-        sample_image = nib.load(os.path.join(base_dir, "Image", "Base_Img", "IR.nii.gz")).get_fdata()
-        # procesamiento para IR
-    elif (extension == "T1.nii"):
-        sample_image = nib.load(os.path.join(base_dir, "Image", "Base_Img", "T1.nii.gz")).get_fdata()
-        # procesamiento para T1
-    else:
-        raise ValueError("Tipo de imagen no soportado")
-    return sample_image
 
 def is_int(s):
     try:
@@ -64,12 +47,12 @@ def show_image(original, filtered, canva, axis, window):
     global axis2
     axis2 = axis
     if (axis2 == "x"):
-        slider2 = ctk.CTkSlider(window, from_=0, to=original.shape[0]-1)
+        slider2 = ctk.CTkSlider(window, from_=np.min(original), to=original.shape[0]-1)
     elif (axis2 == "y"):
-        slider2 = ctk.CTkSlider(window, from_=0, to=original.shape[1]-1)
+        slider2 = ctk.CTkSlider(window, from_=np.min(original), to=original.shape[1]-1)
     elif (axis2 == "z"):
-        slider2 = ctk.CTkSlider(window, from_=0, to=original.shape[2]-1)
-    slider2.set(0)
+        slider2 = ctk.CTkSlider(window, from_=np.min(original), to=original.shape[2]-1)
+    slider2.set(np.min(original))
     slider2.place(relx=0.175, rely=0.95, anchor="c")
 
     #Slider Entry
@@ -151,15 +134,11 @@ def show_image(original, filtered, canva, axis, window):
 
 def rescaling(canva):
     global canvas_widget2, fig2, ax2, ax3, image, path, slider2, set_value_button2, slider_value_entry2
-    sample_image = load_image(path)
     canva.delete("all")
     min_value = image.min()
     max_value = image.max()
-    min_sample_value = sample_image.min()
-    max_sample_value = sample_image.max()
 
     img_data_rescaled = (image - min_value) / (max_value - min_value)
-    sample_image_rescaled = (sample_image - min_sample_value) / (max_sample_value - min_sample_value)
     image = img_data_rescaled
     #Create a neew figure and plot the histogram
     if fig2 is not None:
@@ -179,8 +158,7 @@ def rescaling(canva):
     
     fig2, ax2 = plt.subplots()
         
-    ax2.hist(sample_image_rescaled[sample_image_rescaled >0.01].flatten(), 100)
-    ax2.hist(img_data_rescaled[img_data_rescaled>0.01].flatten(),bins=100, alpha=0.7)
+    ax2.hist(img_data_rescaled[img_data_rescaled>0.01].flatten(),bins=100)
     #Medidas originales (640,480)
     canvas_widget2 = FigureCanvasTkAgg(fig2,canva)
     canvas_widget2.get_tk_widget().configure(width=600, height=450)
@@ -188,15 +166,11 @@ def rescaling(canva):
 
 def zscore(canva):
     global canvas_widget2, fig2, ax2, ax3, image, path, slider2, set_value_button2, slider_value_entry2
-    sample_image = load_image(path)
     canva.delete("all")
     mean_value = image[image>10].mean()
     std_deviation_value = image[image>10].std()
-    mean_sample_value = sample_image[sample_image>10].mean()
-    std_deviation_sample_value = sample_image[sample_image>10].std()
 
     img_data_rescaled = (image - mean_value) / std_deviation_value
-    sample_image_rescaled = (sample_image - mean_sample_value) / std_deviation_sample_value
     image = img_data_rescaled
     #Create a neew figure and plot the histogram
     if fig2 is not None:
@@ -215,8 +189,7 @@ def zscore(canva):
             slider_value_entry2 = None
     
     fig2, ax2 = plt.subplots()
-    ax2.hist(sample_image_rescaled.flatten(), 100)
-    ax2.hist(img_data_rescaled.flatten(),bins=100, alpha=0.7)
+    ax2.hist(img_data_rescaled.flatten(),bins=100)
 
     canvas_widget2 = FigureCanvasTkAgg(fig2,canva)
     canvas_widget2.get_tk_widget().configure(width=600, height=450)
@@ -224,20 +197,15 @@ def zscore(canva):
 
 def white_stripe(canva):
     global canvas_widget2, fig2, ax2, ax3, image, path, slider2, set_value_button2, slider_value_entry2
-    sample_image = load_image(path)
     canva.delete("all")
     #Calcular el histograma
     hist, bin_edges = np.histogram(image.flatten(), bins=100)
-    sample_hist, sample_bin_edges = np.histogram(sample_image.flatten(), bins=100)
     #Encontrar picos
     peaks, _ = find_peaks(hist, height=100)
     val_peaks = bin_edges[peaks]
-    sample_peaks, sample_ = find_peaks(sample_hist, height=100)
-    val_sample_peaks = sample_bin_edges[sample_peaks]
 
     #Rescalado de la imagen
     img_data_rescaled = image/val_peaks[1]
-    sample_image_rescaled = sample_image/val_sample_peaks[1]
     image = img_data_rescaled
 
     #Mostrar el histograma con los picos identificados
@@ -257,35 +225,26 @@ def white_stripe(canva):
             slider_value_entry2 = None
     
     fig2, ax2 = plt.subplots()
-    ax2.hist(sample_image_rescaled.flatten(), 100)
-    ax2.hist(img_data_rescaled.flatten(), 100, alpha = 0.7)
-    #ax2.axvline(val_peaks[0], color='r', linestyle='--')
-    #ax2.hist(image.flatten(), bins=100)
-    #ax2.plot(bin_edges[peaks], hist[peaks], "x")
+    ax2.hist(img_data_rescaled.flatten(), 100)
 
     canvas_widget2 = FigureCanvasTkAgg(fig2,canva)
     canvas_widget2.get_tk_widget().configure(width=600, height=450)
     canvas_widget2.get_tk_widget().pack()
 
 def hist_matching(canva):
-    global canvas_widget2, fig2, ax2, ax3, image, slider2, set_value_button2, slider_value_entry2
+    global canvas_widget2, fig2, ax2,ax3, image, slider2, set_value_button2, slider_value_entry2
+    k = 3
     file_path = filedialog.askopenfilename(filetypes=[("NIfTI files", "*.nii.gz")])
     reference_image = nib.load(file_path).get_fdata()
 
-    hist, bins = np.histogram(image.flatten(), 256, [0, 256])
-    ref_hist, ref_bins = np.histogram(reference_image.flatten(), 256, [0, 256])
+    ref_hist = reference_image.flatten()
+    img_hist = image.flatten()
 
-    hist_cdf = hist.cumsum()
-    hist_cdf_normalized = hist_cdf / hist_cdf.max()
-    ref_hist_cdf = ref_hist.cumsum()
-    ref_hist_cdf_normalized = ref_hist_cdf / ref_hist_cdf.max()
+    ref_landmarks = np.percentile(ref_hist, np.linspace(0,100,k))
+    img_landmarks = np.percentile(img_hist, np.linspace(0,100,k))
 
-    #Compute the mapping function that matches the CDFs of the input and reference images
-    mapping = np.interp(hist_cdf_normalized, ref_hist_cdf_normalized, ref_bins[:-1])
-
-    #Apply the mapping function to the input image
-    matched_image = np.interp(image.flatten(), bins[:-1], mapping)
-    #matched_image.reshape(image.shape).astype('uint8')
+    mapping = np.interp(img_hist, img_landmarks, ref_landmarks)
+    matched_image = mapping.reshape(image.shape)
     image = matched_image
 
     if fig2 is not None:
@@ -305,6 +264,7 @@ def hist_matching(canva):
     
     fig2, ax2 = plt.subplots()
     ax2.hist(matched_image.flatten(), 100)
+    ax2.hist(reference_image.flatten(), 100, alpha=0.5)
 
     canvas_widget2 = FigureCanvasTkAgg(fig2,canva)
     canvas_widget2.get_tk_widget().configure(width=600, height=450)
