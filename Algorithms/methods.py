@@ -126,41 +126,27 @@ def k_form(image, axis, axis_value):
 
 #Region Growing Algorithm
 def region_img(image, tolerance, origin_x, origin_y ,origin_z, axis, axis_value):
-    x = 1
-    y = 1
-    z = 1
-    valor_medio_cluster = image[origin_x, origin_y, 20]
+    valor_medio_cluster = image[origin_x, origin_y, origin_z]
     segmentation = np.zeros_like(image)
-    point = [origin_x,origin_y]
-    tail = [point]
-    evaluated=[]
-    while True:
-      punto = tail.pop(0)
+    segmentation[origin_x, origin_y, origin_z] = 1
+    neighbors=[(origin_x, origin_y, origin_z)]
+    while neighbors:
+      x, y, z = neighbors.pop()
 
-      print(len(tail))
-      
-      for dx in [-x, 0, x] :
-        for dy in [-y, 0, y] :
-          if((punto[0]+dx < 230) and ((punto[0]+dx) > 0) and (punto[1]+dy < 230) and ((punto[1]+dy) > 0) ):
-            if ([punto[0]+dx, punto[1]+dy] not in(evaluated)):
-              if np.abs(valor_medio_cluster - image[punto[0]+dx, punto[1]+dy, 20]) < tolerance :
-                  segmentation[punto[0]+dx, punto[1]+dy, 20] = 1
-                  tail.append([punto[0]+dx, punto[1]+dy])
-                  evaluated.append([punto[0]+dx, punto[1]+dy])
-              else :
-                  segmentation[punto[0]+dx, punto[1]+dy, 20] = 0
-                  tail.append([punto[0]+dx, punto[1]+dy])
-                  evaluated.append([punto[0]+dx, punto[1]+dy])
-
-      valor_medio_cluster = image[segmentation == 1].mean()
-
-      
-
-      # x += 1
-      # y += 1
-      # z += 1
-      if len(tail) == 0:
-        break
+      for dx in [-1, 0, 1] :
+        for dy in [-1, 0, 1] :
+          for dz in [-1, 0, 1]:
+            if(
+                ((x+dx) < image.shape[0]) and 
+                ((x+dx) >= 0) and
+                ((y+dy) < image.shape[1]) and 
+                ((y+dy) >= 0) and
+                ((z+dz) < image.shape[2]) and
+                ((z+dz) >= 0)
+                ):
+                  if np.abs(valor_medio_cluster - image[x+dx, y+dy, z + dz]) < tolerance and segmentation[x+dx, y+dy, z+dz] == 0 :
+                        segmentation[x+dx, y+dy, z+dz] = 1
+                        neighbors.append((x+dx, y+dy, z+dz))
 
     if (axis == "x"):
         plt.imshow(segmentation[axis_value,:,:])

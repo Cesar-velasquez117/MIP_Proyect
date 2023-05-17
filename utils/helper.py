@@ -102,7 +102,7 @@ def denoise_clicked(option, combobox2,canva,window):
         mean_filter(canva,axis,window)
     if selected_option == "median-filter":
         median_filter(canva, axis, window)
-    if selected_option == "edge-filte":
+    if selected_option == "edge-filter":
         edge_filter(canva, axis, window)
 
 def borders(image):

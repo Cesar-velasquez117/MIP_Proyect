@@ -97,11 +97,6 @@ def display_borders():
     image = get_updated_image()
     border = borders(image)
     delete_fig()
-    if ax is not None:
-        ax.clear()
-    if fig is not None:
-        fig.clear()
-
     canvas.delete("all")
 
     #Slider 
