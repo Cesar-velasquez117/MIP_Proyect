@@ -226,6 +226,8 @@ reg_growing_button = ctk.CTkRadioButton(master=radiobutton_frame, text="Region G
 reg_growing_button.configure(font=("Times New Roman", 20))
 k_means_button = ctk.CTkRadioButton(master=radiobutton_frame, text="K-means", variable = option, value="k-means")
 k_means_button.configure(font=("Times New Roman", 20))
+gaussian_button = ctk.CTkRadioButton(master=radiobutton_frame, text="Gaussian Mixtures Model", variable = option, value="gaussian mixtures model")
+gaussian_button.configure(font=("Times New Roman", 20))
 
 #Canvas
 canvas = tkinter.Canvas(window, width=window_width/4, height=window_height/4)
@@ -260,6 +262,7 @@ segmentation_label.place(x=10, y= 20, anchor="w")
 thresholding_button.place(x=10, y=60, anchor="w")
 reg_growing_button.place(x=10, y=100, anchor="w")
 k_means_button.place(x=10, y=140, anchor="w")
+gaussian_button.place(x=10, y=180, anchor="w")
 apply_button.place(x=160, y = 200, anchor="n")
 
 #GUI Preprocessing

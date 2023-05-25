@@ -308,3 +308,102 @@ def thresholding_form(image, axis, axis_value):
     finish_button.place(relx=0.5, rely= 0.85, anchor="n")
 
     top.mainloop()
+
+#Gaussian Mixtures Models Algorithm
+def likehood(image, mean, std):
+    return np.exp(-0.5 * ((image-mean)/std) **2)/(std * np.sqrt(2 * np.pi))
+
+def gaussian_mixtures(image, clusters, iterations,tolerance, axis, axis_value):
+    voxels = np.prod(image.shape)
+    mean = np.linspace(image.min(), image.max())
+    std = np.ones(clusters)*(image.max() - image.min())/ (2*clusters)
+    pre_probability = np.ones(clusters)/clusters
+    post_probaility = np.zeros((voxels,clusters))
+
+    for i in range(iterations):
+        for k in range(clusters):
+            post_probaility[:,k]= pre_probability[k] * likehood(image.flatten(), mean[k], std[k])
+        post_probaility = post_probaility/np.sum(post_probaility, axis=1)[:,np.newaxis]
+    
+        new = np.sum(post_probaility, axis=0)
+        pre_probability = new/voxels
+        mean = np.sum(post_probaility*image.flatten()[:,np.newaxis], axis=0)/new
+        std = np.sqrt(np.sum(post_probaility*(image.flatten()[:,np.newaxis] - mean) **2, axis=0)/new)
+
+        if np.max(np.abs(pre_probability - post_probaility.sum(axis=0)/voxels)) < tolerance:
+            break
+    
+    segmentation = np.argmax(post_probaility, axis=1)
+    segmentation = segmentation.reshape(image.shape)
+    #Show image
+    if (axis == "x"):
+        plt.imshow(segmentation[axis_value,:,:])
+    elif (axis == "y"):
+        plt.imshow(segmentation[:,axis_value,:])
+    elif (axis == "z"):
+        plt.imshow(segmentation[:,:,axis_value])
+    #Show histogram
+    #plt.hist(image.flatten(), 50)
+    plt.show()
+
+def gaussian_form(image, axis, axis_value):
+    #Gets the values for the thresholding algorithm
+    def finish_form():
+        k=int(segment_entry.get())
+        iterations=int(iteration_entry.get())
+        tol=float(tolerance_entry.get())
+
+        gaussian_mixtures(image,k,iterations, tol,axis, axis_value)
+
+        segment_entry.delete(0, tkinter.END)
+        iteration_entry.delete(0, tkinter.END)
+        tolerance_entry.delete(0, tkinter.END)
+        top.destroy()
+    #GUI
+    top = ctk.CTkToplevel()
+    top.title("Thresholding Form")
+    top.grab_set() #Block the main window
+    top.protocol("WM_DELETE_WINDOW", lambda: top.destroy())
+    #Get screen dimensions
+    screen_width = 1920
+    screen_height = 1080
+    #Set window dimensions
+    top_width = int(screen_width * 0.25)
+    top_height = int(screen_height*0.3)
+    #Position
+    top_x = int(screen_width/3)
+    top_y = int(screen_height/4)
+    top.geometry(f"{top_width}x{top_height}+{top_x}+{top_y}")
+
+    #Frame
+    form_frame = ctk.CTkFrame(top, width=top_width*0.8, height=top_height*0.8)
+
+    #Label
+    title_label = ctk.CTkLabel(form_frame, text="GMM Form", font=("Times New Roman", 20, "bold"))
+    segments_label = ctk.CTkLabel(form_frame, text="# Segments: ", font=("Times New Roman", 20, "bold"))
+    iterations_label = ctk.CTkLabel(form_frame, text="# Iterations: ", font=("Times New Roman", 20, "bold"))
+    tolerance_label = ctk.CTkLabel(form_frame, text="Tolerance: ", font=("Times New Roman", 20, "bold"))
+
+    #Textfield
+    segment_entry = ctk.CTkEntry(form_frame, width=140, validate="key")
+    segment_entry.configure(validatecommand=(top.register(on_validate_int), '%P'))
+    iteration_entry = ctk.CTkEntry(form_frame, width=140, validate="key")
+    iteration_entry.configure(validatecommand=(top.register(on_validate_int), '%P'))
+    tolerance_entry = ctk.CTkEntry(form_frame, width=140, validate="key")
+    tolerance_entry.configure(validatecommand=(top.register(on_validate_float), '%P'))
+
+    #Button
+    finish_button = ctk.CTkButton(form_frame, text="Finish Form", width=50, height=30, command=finish_form)
+
+    #Pack
+    form_frame.place(relx=0.5, rely=0.5, anchor="c")
+    title_label.place(relx=0.5, rely=0.1, anchor="n")
+    segments_label.place(relx=0.2, rely=0.3, anchor="w")
+    iterations_label.place(relx=0.2, rely=0.5, anchor="w")
+    tolerance_label.place(relx=0.2, rely=0.7, anchor="w")
+    segment_entry.place(relx=0.5, rely=0.3, anchor="w")
+    iteration_entry.place(relx=0.5, rely=0.5, anchor="w")
+    tolerance_entry.place(relx=0.5, rely=0.7, anchor="w")
+    finish_button.place(relx=0.5, rely= 0.85, anchor="n")
+
+    top.mainloop()
