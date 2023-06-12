@@ -344,3 +344,7 @@ def edge_filter(canva, axis, window):
     
     show_image(image, filtered_image_data, canva, axis, window)
     image = filtered_image_data
+
+######################################################################################################################
+#REGISTRATION
+

@@ -3,6 +3,7 @@ import customtkinter as ctk
 import nibabel as nib
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from utils.helper import add_sidebar, on_validate_int, browse_file, on_closing, method_clicked, denoise_clicked, option_clicked, borders
 from utils.globals import *
@@ -59,17 +60,17 @@ def display_image():
         if (axis == "x"):
             x = int(slider.get())
             axis_value = x
-            ax.imshow(image [x,:,:])
+            ax.imshow(image [x,:,:], cmap=cm.gray)
             canvas_widget.draw()
         elif (axis == "y"):
             y = int(slider.get())
             axis_value = y
-            ax.imshow(image [:,y,:])
+            ax.imshow(image [:,y,:], cmap=cm.gray)
             canvas_widget.draw()
         elif (axis == "z"):
             z = int(slider.get())
             axis_value = z
-            ax.imshow(image [:,:,z])
+            ax.imshow(image [:,:,z], cmap=cm.gray)
             canvas_widget.draw()
         
     slider.bind("<B1-Motion>", update_image)
@@ -80,11 +81,11 @@ def display_image():
         ax.clear()
         
     if (axis == "x"):
-        ax.imshow(image[0,:,:])
+        ax.imshow(image[0,:,:], cmap=cm.gray)
     elif (axis == "y"):
-        ax.imshow(image[:,0,:])
+        ax.imshow(image[:,0,:], cmap=cm.gray)
     elif (axis == "z"):
-        ax.imshow(image[:,:,0])
+        ax.imshow(image[:,:,0], cmap=cm.gray)
         
     if canvas_widget is None:
         canvas_widget = FigureCanvasTkAgg(fig,canvas)
@@ -273,7 +274,7 @@ window2.geometry(f"{window_width}x{window_height}+{x}+{y}")
 
 #Frames
 browse_frame = ctk.CTkFrame(window2, width=window_width/2, height=120)
-select_frame = ctk.CTkFrame(window2, width= window_width/3, height=110)
+select_frame = ctk.CTkFrame(window2, width= window_width/3, height=160)
 standarization_frame = ctk.CTkFrame(window2, width= window_width/7, height=300)
 noise_frame= ctk.CTkFrame(window2, width= window_width/7, height=300)
 
@@ -293,7 +294,7 @@ browse_button = ctk.CTkButton(browse_frame, text="Browse Image", width=40, heigh
 standarization_button = ctk.CTkButton(standarization_frame, text="Show Histogram", width=40, height=28, command=lambda: method_clicked(standarization_option,canvas2))
 noise_button = ctk.CTkButton(noise_frame, text="Show Image", width=40, height=28, command=lambda: denoise_clicked(noise_option, axis_combobox2, canvas2,window2))
 set_img_button = ctk.CTkButton(select_frame, text="Set Image", width=100,command= lambda: set_image(paths_combobox2.get(), selected_file_label2, selected_file_label))
-
+register_button = ctk.CTkButton(select_frame, text="Register Image", width=100)
 #Radio Buttons
 rescaling_button = ctk.CTkRadioButton(standarization_frame, text="Rescaling", variable = standarization_option, value="rescaling", font=("Times New Roman", 16))
 z_score_button = ctk.CTkRadioButton(standarization_frame, text="Z-Score", variable= standarization_option, value="z-score", font=("Times New Roman", 16))
@@ -318,12 +319,13 @@ selected_file_label2.place(relx=0.5, y=90,  anchor="n")
 #Canvas
 canvas2.place(relx=0.3, rely=0.56, anchor="c")
 #Select-Frame
-select_frame.place(relx=0.75, rely=0.3, anchor="c")
+select_frame.place(relx=0.75, rely=0.33, anchor="c")
 choose_file_label.place(relx=0.1, rely=0.25, anchor="w")
-paths_combobox2.place(relx=0.4, rely=0.7, anchor="c")
-set_img_button.place(relx=0.75, rely=0.7, anchor="c")
+paths_combobox2.place(relx=0.4, rely=0.55, anchor="c")
+set_img_button.place(relx=0.75, rely=0.55, anchor="c")
+register_button.place(relx=0.5, rely=0.8, anchor="c")
 #Standarization-Frame
-standarization_frame.place(relx=0.66, rely=0.425, anchor="n")
+standarization_frame.place(relx=0.66, rely=0.475, anchor="n")
 standarization_label.place(relx=0.5, rely=0.025, anchor="n")
 rescaling_button.place(relx=0.1, rely= 0.2, anchor="w")
 z_score_button.place(relx=0.1, rely= 0.35, anchor="w")
@@ -331,7 +333,7 @@ white_stripe_button.place(relx=0.1, rely= 0.5, anchor="w")
 pair_button.place(relx=0.1, rely= 0.65, anchor="w")
 standarization_button.place(relx=0.5, rely=0.9, anchor="c")
 #Noise-Frame
-noise_frame.place(relx=0.84, rely=0.425, anchor="n")
+noise_frame.place(relx=0.84, rely=0.475, anchor="n")
 noise_label.place(relx=0.5, rely=0.05, anchor="n")
 mean_button.place(relx=0.1, rely=0.2, anchor="w")
 median_button.place(relx=0.1, rely= 0.35, anchor="w")
