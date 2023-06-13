@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import customtkinter as ctk
 import tkinter
-
+import SimpleITK as sitk
 #Auxiliary Functions
 def is_int(s):
     try:
@@ -51,6 +51,8 @@ def k_img(image,tolerance, iterations, k, axis, axis_value):
 
         centroids_old = centroids.copy()
 
+    segmented = sitk.GetImageFromArray(segmentation)
+    sitk.WriteImage(segmented, "Segmentations/k-means_segmentation.nii.gz")
     #Show image
     if (axis == "x"):
         plt.imshow(segmentation[axis_value,:,:])
@@ -148,6 +150,8 @@ def region_img(image, tolerance, origin_x, origin_y ,origin_z, axis, axis_value)
                         segmentation[x+dx, y+dy, z+dz] = 1
                         neighbors.append((x+dx, y+dy, z+dz))
 
+    segmented = sitk.GetImageFromArray(segmentation)
+    sitk.WriteImage(segmented, "Segmentations/rg_segmentation.nii.gz")
     if (axis == "x"):
         plt.imshow(segmentation[axis_value,:,:])
     elif (axis == "y"):
@@ -242,7 +246,9 @@ def threshold_img(image, tolerance, tau, axis, axis_value):
             break
         else:
             tau = post_tau
-        
+
+    segmented = sitk.GetImageFromArray(segmentation)
+    sitk.WriteImage(segmented, "Segmentations/isodata_segmentation.nii.gz")
     #Show image
     if (axis == "x"):
         plt.imshow(segmentation[axis_value,:,:])
@@ -335,6 +341,8 @@ def gaussian_mixtures(image, clusters, iterations,tolerance, axis, axis_value):
     
     segmentation = np.argmax(post_probaility, axis=1)
     segmentation = segmentation.reshape(image.shape)
+    segmented = sitk.GetImageFromArray(segmentation)
+    sitk.WriteImage(segmented, "Segmentations/gaussian_segmentation.nii.gz")
     #Show image
     if (axis == "x"):
         plt.imshow(segmentation[axis_value,:,:])

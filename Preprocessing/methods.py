@@ -5,6 +5,7 @@ import os
 import numpy as np
 import customtkinter as ctk
 import tkinter
+import SimpleITK as sitk
 from tkinter import filedialog
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from utils.globals import canvas_widget2, fig2, ax2, ax3, slider2, set_value_button2, slider_value_entry2, image
@@ -233,7 +234,7 @@ def white_stripe(canva):
 
 def hist_matching(canva):
     global canvas_widget2, fig2, ax2,ax3, image, slider2, set_value_button2, slider_value_entry2
-    k = 3
+    k = 40
     file_path = filedialog.askopenfilename(filetypes=[("NIfTI files", "*.nii.gz")])
     reference_image = nib.load(file_path).get_fdata()
 
@@ -310,10 +311,7 @@ def edge_filter(canva, axis, window):
     # Median Filter with borders
     filtered_image_data = np.zeros_like(image)
 
-    #threshold = 500
-
-    # Estimate the standard deviation of the pixel intensity
-    std = np.std(image)
+    threshold = float(input("Ingrese el valor del umbral: "))
 
     for x in range(1, image.shape[0]-2):
         for y in range(1, image.shape[1]-2):
@@ -325,10 +323,20 @@ def edge_filter(canva, axis, window):
 
                 # Compute the magnitude of the gradient
                 magnitude = np.sqrt(dx*dx + dy*dy + dz*dz)
-
-            
+           
                 # Compute the threshold using a fraction of the standard deviation
-                threshold = 3 * std
+                below_threshold = magnitude[magnitude < threshold]
+                above_threshold = magnitude[magnitude >= threshold]
+
+                if below_threshold.size > 0 and above_threshold.size > 0:
+                    # Calculate the new threshold as the average of below_threshold and above_threshold
+                    threshold = (np.mean(below_threshold) + np.mean(above_threshold)) / 2
+                elif below_threshold.size > 0:
+                    threshold = np.mean(below_threshold)
+                elif above_threshold.size > 0:
+                    threshold = np.mean(above_threshold)
+                else:
+                    threshold = threshold
 
                 # If the magnitude is below the threshold, apply median filter
                 if magnitude < threshold:
@@ -348,3 +356,64 @@ def edge_filter(canva, axis, window):
 ######################################################################################################################
 #REGISTRATION
 
+def rigid_register():
+    fixed_path = filedialog.askopenfilename(filetypes=[("NIfTI files", "*.nii.gz")])
+    global path
+    #Load Images
+    fixed_image = sitk.ReadImage(fixed_path)
+    moving_image = sitk.ReadImage(path)
+
+    #Convert image types
+    fixed_image = sitk.Cast(fixed_image, sitk.sitkFloat32)
+    moving_image = sitk.Cast(moving_image, sitk.sitkFloat32)
+
+    # Define the registration components
+    registration_method = sitk.ImageRegistrationMethod()
+
+    # Similarity metric - Mutual Information
+    registration_method.SetMetricAsMattesMutualInformation()
+
+    # Interpolator
+    registration_method.SetInterpolator(sitk.sitkNearestNeighbor)
+
+    # Optimizer - Gradient Descent
+    registration_method.SetOptimizerAsGradientDescent(learningRate=1.0, numberOfIterations=100,
+                                                     estimateLearningRate=registration_method.EachIteration)
+
+    # Initial transform - Identity
+    initial_transform = sitk.Transform()
+    registration_method.SetInitialTransform(initial_transform)
+
+    # Setup for the registration process
+    registration_method.SetShrinkFactorsPerLevel(shrinkFactors=[4, 2, 1])
+    registration_method.SetSmoothingSigmasPerLevel(smoothingSigmas=[2, 1, 0])
+    registration_method.SmoothingSigmasAreSpecifiedInPhysicalUnitsOn()
+
+    # Perform registration
+    final_transform = registration_method.Execute(fixed_image, moving_image)
+
+    # Apply the final transformation to the moving image
+    registered_image = sitk.Resample(moving_image, fixed_image, final_transform, sitk.sitkNearestNeighbor, 0.0, fixed_image.GetPixelID())
+
+    # Crear una ventana
+    window = ctk.CTkToplevel()
+    screen_width = 1920
+    screen_height = 1080
+    #Set window dimensions
+    window_width = int(screen_width * 0.2)
+    window_height = int(screen_height*0.05)
+    #Position
+    x = int(screen_width*0.25)
+    y = int(screen_height*0.25)
+    window.geometry(f"{window_width}x{window_height}+{x}+{y}")
+    # Definir el mensaje que se mostrará
+    mensaje = "Se ha registrado la imagen con exito"
+
+    # Crear un widget Label para mostrar el mensaje
+    label = ctk.CTkLabel(window, text=mensaje)
+    label.pack()
+
+    # Mostrar la ventana
+    window.start()
+    # Save the registered image as NIfTI
+    sitk.WriteImage(registered_image, "Registration/registered_img.nii.gz")

@@ -7,7 +7,7 @@ import matplotlib.cm as cm
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from utils.helper import add_sidebar, on_validate_int, browse_file, on_closing, method_clicked, denoise_clicked, option_clicked, borders
 from utils.globals import *
-from Preprocessing.methods import set_image, get_updated_image, delete_fig
+from Preprocessing.methods import set_image, get_updated_image, delete_fig, rigid_register
 #FUNCTIONS
 
 def display_image():
@@ -294,7 +294,7 @@ browse_button = ctk.CTkButton(browse_frame, text="Browse Image", width=40, heigh
 standarization_button = ctk.CTkButton(standarization_frame, text="Show Histogram", width=40, height=28, command=lambda: method_clicked(standarization_option,canvas2))
 noise_button = ctk.CTkButton(noise_frame, text="Show Image", width=40, height=28, command=lambda: denoise_clicked(noise_option, axis_combobox2, canvas2,window2))
 set_img_button = ctk.CTkButton(select_frame, text="Set Image", width=100,command= lambda: set_image(paths_combobox2.get(), selected_file_label2, selected_file_label))
-register_button = ctk.CTkButton(select_frame, text="Register Image", width=100)
+register_button = ctk.CTkButton(select_frame, text="Register Image", width=100, command=rigid_register)
 #Radio Buttons
 rescaling_button = ctk.CTkRadioButton(standarization_frame, text="Rescaling", variable = standarization_option, value="rescaling", font=("Times New Roman", 16))
 z_score_button = ctk.CTkRadioButton(standarization_frame, text="Z-Score", variable= standarization_option, value="z-score", font=("Times New Roman", 16))
