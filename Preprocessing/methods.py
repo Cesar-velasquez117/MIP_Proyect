@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 import customtkinter as ctk
-import tkinter
 import SimpleITK as sitk
 from tkinter import filedialog
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -48,12 +47,12 @@ def show_image(original, filtered, canva, axis, window):
     global axis2
     axis2 = axis
     if (axis2 == "x"):
-        slider2 = ctk.CTkSlider(window, from_=np.min(original), to=original.shape[0]-1)
+        slider2 = ctk.CTkSlider(window, from_=0, to=original.shape[0]-1)
     elif (axis2 == "y"):
-        slider2 = ctk.CTkSlider(window, from_=np.min(original), to=original.shape[1]-1)
+        slider2 = ctk.CTkSlider(window, from_=0, to=original.shape[1]-1)
     elif (axis2 == "z"):
-        slider2 = ctk.CTkSlider(window, from_=np.min(original), to=original.shape[2]-1)
-    slider2.set(np.min(original))
+        slider2 = ctk.CTkSlider(window, from_=0, to=original.shape[2]-1)
+    slider2.set(0)
     slider2.place(relx=0.175, rely=0.95, anchor="c")
 
     #Slider Entry
@@ -338,6 +337,8 @@ def edge_filter(canva, axis, window):
                 else:
                     threshold = threshold
 
+                # Calculate the new threshold as the average of below_threshold and above_threshold
+                # threshold = (np.mean(below_threshold) + np.mean(above_threshold)) / 2
                 # If the magnitude is below the threshold, apply median filter
                 if magnitude < threshold:
                     neighbours = []
@@ -357,15 +358,18 @@ def edge_filter(canva, axis, window):
 #REGISTRATION
 
 def rigid_register():
-    fixed_path = filedialog.askopenfilename(filetypes=[("NIfTI files", "*.nii.gz")])
+    fixed_path = filedialog.askopenfilename(filetypes=[("NIfTI files", "FLAIR.nii.gz")])
+    segmented_path = filedialog.askopenfilename(filetypes=[("NIfTI files", "*.nii.gz")])
     global path
     #Load Images
     fixed_image = sitk.ReadImage(fixed_path)
+    segmented_image = sitk.ReadImage(segmented_path)
     moving_image = sitk.ReadImage(path)
 
     #Convert image types
     fixed_image = sitk.Cast(fixed_image, sitk.sitkFloat32)
     moving_image = sitk.Cast(moving_image, sitk.sitkFloat32)
+    segmented_image = sitk.Cast(segmented_image, sitk.sitkFloat32)
 
     # Define the registration components
     registration_method = sitk.ImageRegistrationMethod()
@@ -390,10 +394,17 @@ def rigid_register():
     registration_method.SmoothingSigmasAreSpecifiedInPhysicalUnitsOn()
 
     # Perform registration
-    final_transform = registration_method.Execute(fixed_image, moving_image)
+    final_transform = registration_method.Execute(fixed_image, segmented_image)
 
     # Apply the final transformation to the moving image
     registered_image = sitk.Resample(moving_image, fixed_image, final_transform, sitk.sitkNearestNeighbor, 0.0, fixed_image.GetPixelID())
+
+    # Save the registered image as NIfTI
+    # Verificar si el archivo existe
+    if os.path.exists("Registration/registered_img.nii.gz"):
+        # Borrar el archivo existente
+        os.remove("Registration/registered_img.nii.gz")
+    sitk.WriteImage(registered_image, "Registration/registered_img.nii.gz")
 
     # Crear una ventana
     window = ctk.CTkToplevel()
@@ -414,6 +425,4 @@ def rigid_register():
     label.pack()
 
     # Mostrar la ventana
-    window.start()
-    # Save the registered image as NIfTI
-    sitk.WriteImage(registered_image, "Registration/registered_img.nii.gz")
+    window.mainloop()

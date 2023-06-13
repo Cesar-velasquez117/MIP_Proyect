@@ -20,12 +20,12 @@ def display_image():
     global axis
     axis = axis_combobox.get()
     if (axis == "x"):
-        slider = ctk.CTkSlider(img_option_frame, from_=np.min(image), to=image.shape[0]-1)
+        slider = ctk.CTkSlider(img_option_frame, from_=0, to=image.shape[0]-1)
     elif (axis == "y"):
-        slider = ctk.CTkSlider(img_option_frame, from_=np.min(image), to=image.shape[1]-1)
+        slider = ctk.CTkSlider(img_option_frame, from_=0, to=image.shape[1]-1)
     elif (axis == "z"):
-        slider = ctk.CTkSlider(img_option_frame, from_=np.min(image), to=image.shape[2]-1)
-    slider.set(np.min(image))
+        slider = ctk.CTkSlider(img_option_frame, from_=0, to=image.shape[2]-1)
+    slider.set(0)
     slider.place(relx=0.5, y=100, anchor="c")
 
     #Slider Entry

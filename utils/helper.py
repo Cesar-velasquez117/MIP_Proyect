@@ -15,12 +15,14 @@ def add_sidebar(window, window2):
     else:
         preprocess_button =  ctk.CTkButton(sidebar, text="Go to Preprocessing", width=140, height=30, command=lambda: show_window(window,window2))
         processing_button = ctk.CTkButton(sidebar, text="Processing Methods", width=140, height=30, command=lambda: processing(window, window2), state="disabled")
+    volume_button = ctk.CTkButton(sidebar, text="Calculate Volumes", width=140, height=30 )
     sidebar_img = ctk.CTkImage(light_image=Image.open("Image/sidebar.png"),dark_image=Image.open("Image/sidebar.png"),size=(50,50))
     sidebar_button = ctk.CTkButton(window, width=50,text="", image=sidebar_img, command=sidebar.animate, fg_color="transparent", hover_color="lightgray", anchor="w")
     #Sidebar elements
     sidebar_button.place(relx=0,rely=0, anchor="nw")
     processing_button.place(relx=0.5, rely=0.1, anchor="c")
     preprocess_button.place(relx=0.5, rely=0.2, anchor="c")
+    volume_button.place(relx=0.5, rely=0.3, anchor="c")
 
 def is_int(s):
     try:
