@@ -63,30 +63,6 @@ def k_img(image, tolerance, iterations, k, axis, axis_value):
     # Show histogram
     # plt.hist(image.flatten(), 100)
     plt.show()
-    
-# def k_img(image, tolerance, iterations, k, axis, axis_value):
-#     # initialize centroids
-#     centroids = np.linspace(np.amin(image), np.amax(image), k)
-#     for i in range(0,iterations):
-#         distances = np.abs(image[...,np.newaxis] - centroids)
-#         segmentation = np.argmin(distances, axis=-1)
-
-#         for id in range(k):
-#             cluster = image[segmentation == id]
-#             if len(cluster) > 0:
-#                 centroids[id] = cluster.mean()
-
-#     save_image(segmentation, "k-means_segmentation.nii.gz")
-#     #Show image
-#     if (axis == "x"):
-#         plt.imshow(segmentation[axis_value,:,:])
-#     elif (axis == "y"):
-#         plt.imshow(segmentation[:,axis_value,:])
-#     elif (axis == "z"):
-#         plt.imshow(segmentation[:,:,axis_value])
-#     # Show histogram
-#     # plt.hist(image.flatten(), 100)
-#     plt.show()
 
 def k_form(image, axis, axis_value):
     #Gets the values for the thresholding algorithm
@@ -259,34 +235,6 @@ def region_form(image, axis, axis_value):
 
     top.mainloop()
 
-#Thresholding Algorithm
-# def threshold_img(image, tolerance, tau, axis, axis_value):
-#     while True:
-#         segmentation = image >= tau
-#         mBG = image[np.multiply(image > 10, segmentation == 0)].mean()
-#         mFG = image[np.multiply(image > 10, segmentation == 1)].mean()
-    
-#         post_tau = 0.5 * (mBG + mFG)
-
-#         if np.abs(tau-post_tau) < tolerance:
-#             break
-#         else:
-#             tau = post_tau
-
-#     # Verificar si el archivo existe
-#     save_image(segmentation, "isodata_segmentation.nii.gz")
-#     # segmented_img = nib.Nifti1Image(segmentation.astype(np.float32), affine=np.eye(4))
-#     # nib.save(segmented_img, "Segmentations/isodata_segmentation.nii.gz")
-#     #Show image
-#     if (axis == "x"):
-#         plt.imshow(segmentation[axis_value,:,:])
-#     elif (axis == "y"):
-#         plt.imshow(segmentation[:,axis_value,:])
-#     elif (axis == "z"):
-#         plt.imshow(segmentation[:,:,axis_value])
-#     #Show histogram
-#     #plt.hist(image.flatten(), 50)
-#     plt.show()
 def threshold_img(image, tolerance, tau, axis, axis_value):
     while True:
         segmentation = image >= tau

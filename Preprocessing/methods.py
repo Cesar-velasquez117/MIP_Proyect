@@ -314,7 +314,7 @@ def edge_filter(canva, axis, window):
     # Median Filter with borders
     filtered_image_data = np.zeros_like(image)
 
-    threshold = float(input("Ingrese el valor del umbral: "))
+    threshold = 100
 
     for x in range(1, image.shape[0]-2):
         for y in range(1, image.shape[1]-2):
@@ -382,8 +382,7 @@ def rigid_register():
     registration_method.SetInterpolator(sitk.sitkNearestNeighbor)
 
     # Optimizer - Gradient Descent
-    registration_method.SetOptimizerAsGradientDescent(learningRate=1.0, numberOfIterations=100,
-                                                     estimateLearningRate=registration_method.EachIteration)
+    registration_method.SetOptimizerAsGradientDescent(learningRate=1.0, numberOfIterations=100, estimateLearningRate=registration_method.EachIteration)
 
     # Initial transform - Identity
     initial_transform = sitk.Transform()
