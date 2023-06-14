@@ -4,4 +4,3 @@ nibabel
 matplotlib
 scipy
 SimpleITK
-antspyx
