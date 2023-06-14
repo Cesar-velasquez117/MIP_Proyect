@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import customtkinter as ctk
 import tkinter
 import nibabel as nib
+import os
+from Preprocessing.methods import get_updated_path
 #Auxiliary Functions
 def is_int(s):
     try:
@@ -28,31 +30,29 @@ def on_validate_float(new_value):
     if new_value.strip() == "":
         return True
     return is_float(new_value)
-
+#Function to save the image 
+def save_image(image, filename):
+    imageUploaded = nib.load(get_updated_path())
+    affine = imageUploaded.affine
+    # Create a nibabel image object from the image data
+    image = nib.Nifti1Image(image.astype(np.float32), affine=affine)
+    # Save the image as a NIfTI file
+    output_path = os.path.join("Segmentations", filename)
+    nib.save(image, output_path)
 #K-Means algorithm
-def k_img(image,tolerance, iterations, k, axis, axis_value):
+def k_img(image, tolerance, iterations, k, axis, axis_value):
     # initialize centroids
-    centroids = np.random.choice(image.flatten(), k)
-    centroids_old = centroids.copy()
+    centroids = np.linspace(np.amin(image), np.amax(image), k)
+    for i in range(iterations):
+        distance = [np.abs(k - image) for k in centroids]
+        segmentation = np.argmin(distance, axis=0)
 
-    for i in range(0, iterations):
-        distances = np.zeros((image.shape[0], image.shape[1], image.shape[2], k))
-        for j, c in enumerate(centroids):
-            distances[:, :, :, j] = np.sqrt((image - c) ** 2)
-        segmentation = np.argmin(distances, axis=-1)
-
-        for j in range(k):
-            cluster = image[segmentation == j]
+        for id in range(k):
+            cluster = image[segmentation == id]
             if len(cluster) > 0:
-                centroids[j] = cluster.mean()
+                centroids[id] = cluster.mean()
 
-        if np.allclose(centroids, centroids_old, atol=tolerance):
-            break
-
-        centroids_old = centroids.copy()
-
-    segmented_img = nib.Nifti1Image(segmentation.astype(np.float32), affine=np.eye(4))
-    nib.save(segmented_img, "Segmentations/k-means_segmentation.nii.gz")
+    save_image(segmentation, "k-means_segmentation.nii.gz")
     #Show image
     if (axis == "x"):
         plt.imshow(segmentation[axis_value,:,:])
@@ -63,6 +63,30 @@ def k_img(image,tolerance, iterations, k, axis, axis_value):
     # Show histogram
     # plt.hist(image.flatten(), 100)
     plt.show()
+    
+# def k_img(image, tolerance, iterations, k, axis, axis_value):
+#     # initialize centroids
+#     centroids = np.linspace(np.amin(image), np.amax(image), k)
+#     for i in range(0,iterations):
+#         distances = np.abs(image[...,np.newaxis] - centroids)
+#         segmentation = np.argmin(distances, axis=-1)
+
+#         for id in range(k):
+#             cluster = image[segmentation == id]
+#             if len(cluster) > 0:
+#                 centroids[id] = cluster.mean()
+
+#     save_image(segmentation, "k-means_segmentation.nii.gz")
+#     #Show image
+#     if (axis == "x"):
+#         plt.imshow(segmentation[axis_value,:,:])
+#     elif (axis == "y"):
+#         plt.imshow(segmentation[:,axis_value,:])
+#     elif (axis == "z"):
+#         plt.imshow(segmentation[:,:,axis_value])
+#     # Show histogram
+#     # plt.hist(image.flatten(), 100)
+#     plt.show()
 
 def k_form(image, axis, axis_value):
     #Gets the values for the thresholding algorithm
@@ -151,8 +175,9 @@ def region_img(image, tolerance, origin_x, origin_y ,origin_z, axis, axis_value)
                         neighbors.append((x+dx, y+dy, z+dz))
 
     # Verificar si el archivo existe
-    segmented_img = nib.Nifti1Image(segmentation.astype(np.float32), affine=np.eye(4))
-    nib.save(segmented_img, "Segmentations/rg_segmentation.nii.gz")
+    save_image(segmentation, "rg_segmentation.nii.gz")
+    # segmented_img = nib.Nifti1Image(segmentation.astype(np.float32), affine=np.eye(4))
+    # nib.save(segmented_img, "Segmentations/rg_segmentation.nii.gz")
     if (axis == "x"):
         plt.imshow(segmentation[axis_value,:,:])
     elif (axis == "y"):
@@ -235,22 +260,65 @@ def region_form(image, axis, axis_value):
     top.mainloop()
 
 #Thresholding Algorithm
+# def threshold_img(image, tolerance, tau, axis, axis_value):
+#     while True:
+#         segmentation = image >= tau
+#         mBG = image[np.multiply(image > 10, segmentation == 0)].mean()
+#         mFG = image[np.multiply(image > 10, segmentation == 1)].mean()
+    
+#         post_tau = 0.5 * (mBG + mFG)
+
+#         if np.abs(tau-post_tau) < tolerance:
+#             break
+#         else:
+#             tau = post_tau
+
+#     # Verificar si el archivo existe
+#     save_image(segmentation, "isodata_segmentation.nii.gz")
+#     # segmented_img = nib.Nifti1Image(segmentation.astype(np.float32), affine=np.eye(4))
+#     # nib.save(segmented_img, "Segmentations/isodata_segmentation.nii.gz")
+#     #Show image
+#     if (axis == "x"):
+#         plt.imshow(segmentation[axis_value,:,:])
+#     elif (axis == "y"):
+#         plt.imshow(segmentation[:,axis_value,:])
+#     elif (axis == "z"):
+#         plt.imshow(segmentation[:,:,axis_value])
+#     #Show histogram
+#     #plt.hist(image.flatten(), 50)
+#     plt.show()
 def threshold_img(image, tolerance, tau, axis, axis_value):
     while True:
         segmentation = image >= tau
-        mBG = image[np.multiply(image > 10, segmentation == 0)].mean()
-        mFG = image[np.multiply(image > 10, segmentation == 1)].mean()
-    
+        #For the Background
+        mBG = image[segmentation == False]
+        if len(mBG) > 0:
+            mBG = np.nan_to_num(mBG, nan=0)
+            mBG = mBG.mean()
+        else:
+            mBG = 0
+
+        #For the Foreground
+        mFG = image[segmentation]
+        if len(mFG) > 0:
+            mFG = np.nan_to_num(mFG, nan=0)
+            mFG = mFG.mean()
+        else:
+            mFG = 0
+
+        # Update tau
         post_tau = 0.5 * (mBG + mFG)
 
-        if np.abs(tau-post_tau) < tolerance:
+        # Check if accepts the tolerance, if not, continue iterating
+        if np.abs(tau - post_tau) < tolerance:
             break
         else:
             tau = post_tau
-
-    # Verificar si el archivo existe
-    segmented_img = nib.Nifti1Image(segmentation.astype(np.float32), affine=np.eye(4))
-    nib.save(segmented_img, "Segmentations/isodata_segmentation.nii.gz")
+        
+    # Guardar la imagen
+    save_image(segmentation, "isodata_segmentation.nii.gz")
+    # segmented_img = nib.Nifti1Image(segmentation.astype(np.float32), affine=np.eye(4))
+    # nib.save(segmented_img, "Segmentations/isodata_segmentation.nii.gz")
     #Show image
     if (axis == "x"):
         plt.imshow(segmentation[axis_value,:,:])
@@ -261,7 +329,7 @@ def threshold_img(image, tolerance, tau, axis, axis_value):
     #Show histogram
     #plt.hist(image.flatten(), 50)
     plt.show()
-
+    
 def thresholding_form(image, axis, axis_value):
     #Gets the values for the thresholding algorithm
     def finish_form():
@@ -344,8 +412,9 @@ def gaussian_mixtures(image, clusters, iterations,tolerance, axis, axis_value):
     segmentation = np.argmax(post_probaility, axis=1)
     segmentation = segmentation.reshape(image.shape)
     # Verificar si el archivo existe
-    segmented_img = nib.Nifti1Image(segmentation.astype(np.float32), affine=np.eye(4))
-    nib.save(segmented_img, "Segmentations/gaussian_segmentation.nii.gz")
+    save_image(segmentation, "gaussian_segmentation.nii.gz")
+    # segmented_img = nib.Nifti1Image(segmentation.astype(np.float32), affine=np.eye(4))
+    # nib.save(segmented_img, "Segmentations/gaussian_segmentation.nii.gz")
     #Show image
     if (axis == "x"):
         plt.imshow(segmentation[axis_value,:,:])

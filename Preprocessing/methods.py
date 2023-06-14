@@ -1,4 +1,5 @@
 from scipy.signal import find_peaks
+from ants import get_ants_data, image_read, resample_image, get_mask, registration, apply_transforms, from_numpy, image_write
 import nibabel as nib
 import matplotlib.pyplot as plt
 import os
@@ -17,6 +18,9 @@ def set_image(file_path, label1, label2):
     label1.configure(text="Current image: " + path)
     label2.configure(text="Current image: " + path)
 
+def get_updated_path():
+    global path
+    return path
 
 def get_updated_image():
     global image
@@ -327,18 +331,18 @@ def edge_filter(canva, axis, window):
                 below_threshold = magnitude[magnitude < threshold]
                 above_threshold = magnitude[magnitude >= threshold]
 
-                if below_threshold.size > 0 and above_threshold.size > 0:
-                    # Calculate the new threshold as the average of below_threshold and above_threshold
-                    threshold = (np.mean(below_threshold) + np.mean(above_threshold)) / 2
-                elif below_threshold.size > 0:
-                    threshold = np.mean(below_threshold)
-                elif above_threshold.size > 0:
-                    threshold = np.mean(above_threshold)
-                else:
-                    threshold = threshold
+                # if below_threshold.size > 0 and above_threshold.size > 0:
+                #     # Calculate the new threshold as the average of below_threshold and above_threshold
+                #     threshold = (np.mean(below_threshold) + np.mean(above_threshold)) / 2
+                # elif below_threshold.size > 0:
+                #     threshold = np.mean(below_threshold)
+                # elif above_threshold.size > 0:
+                #     threshold = np.mean(above_threshold)
+                # else:
+                #     threshold = threshold
 
                 # Calculate the new threshold as the average of below_threshold and above_threshold
-                # threshold = (np.mean(below_threshold) + np.mean(above_threshold)) / 2
+                threshold = (np.mean(below_threshold) + np.mean(above_threshold)) / 2
                 # If the magnitude is below the threshold, apply median filter
                 if magnitude < threshold:
                     neighbours = []
@@ -359,17 +363,14 @@ def edge_filter(canva, axis, window):
 
 def rigid_register():
     fixed_path = filedialog.askopenfilename(filetypes=[("NIfTI files", "FLAIR.nii.gz")])
-    segmented_path = filedialog.askopenfilename(filetypes=[("NIfTI files", "*.nii.gz")])
     global path
     #Load Images
     fixed_image = sitk.ReadImage(fixed_path)
-    segmented_image = sitk.ReadImage(segmented_path)
     moving_image = sitk.ReadImage(path)
 
     #Convert image types
     fixed_image = sitk.Cast(fixed_image, sitk.sitkFloat32)
     moving_image = sitk.Cast(moving_image, sitk.sitkFloat32)
-    segmented_image = sitk.Cast(segmented_image, sitk.sitkFloat32)
 
     # Define the registration components
     registration_method = sitk.ImageRegistrationMethod()
@@ -394,7 +395,7 @@ def rigid_register():
     registration_method.SmoothingSigmasAreSpecifiedInPhysicalUnitsOn()
 
     # Perform registration
-    final_transform = registration_method.Execute(fixed_image, segmented_image)
+    final_transform = registration_method.Execute(fixed_image, moving_image)
 
     # Apply the final transformation to the moving image
     registered_image = sitk.Resample(moving_image, fixed_image, final_transform, sitk.sitkNearestNeighbor, 0.0, fixed_image.GetPixelID())
@@ -426,3 +427,39 @@ def rigid_register():
 
     # Mostrar la ventana
     window.mainloop()
+
+# def rigid_register():
+#     fixed_path = filedialog.askopenfilename(filetypes=[("NIfTI files", "FLAIR.nii.gz")])
+#     global path
+#     # Read the fixed and moving images
+#     fixed_image = image_read(fixed_path)
+#     moving_image = image_read(path)
+
+#     # Perform rigid registration
+#     transform = registration(fixed=fixed_image, moving=moving_image, type_of_transform='Rigid')
+
+#     # Apply the transformation to the moving image
+#     registered_image = apply_transforms(fixed=fixed_image, moving=moving_image, transformlist=transform['fwdtransforms'])
+    
+#     image_write(registered_image, "Registration/registered_img.nii.gz")
+
+#     # Crear una ventana
+#     window = ctk.CTkToplevel()
+#     screen_width = 1920
+#     screen_height = 1080
+#     #Set window dimensions
+#     window_width = int(screen_width * 0.2)
+#     window_height = int(screen_height*0.05)
+#     #Position
+#     x = int(screen_width*0.25)
+#     y = int(screen_height*0.25)
+#     window.geometry(f"{window_width}x{window_height}+{x}+{y}")
+#     # Definir el mensaje que se mostrará
+#     mensaje = "Se ha registrado la imagen con exito"
+
+#     # Crear un widget Label para mostrar el mensaje
+#     label = ctk.CTkLabel(window, text=mensaje)
+#     label.pack()
+
+#     # Mostrar la ventana
+#     window.mainloop()
