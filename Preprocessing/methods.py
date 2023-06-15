@@ -6,7 +6,7 @@ import os
 import numpy as np
 import customtkinter as ctk
 import SimpleITK as sitk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from utils.globals import canvas_widget2, fig2, ax2, ax3, slider2, set_value_button2, slider_value_entry2, image
 
@@ -334,16 +334,6 @@ def edge_filter(canva, axis, window):
                 below_threshold = magnitude[magnitude < threshold]
                 above_threshold = magnitude[magnitude >= threshold]
 
-                # if below_threshold.size > 0 and above_threshold.size > 0:
-                #     # Calculate the new threshold as the average of below_threshold and above_threshold
-                #     threshold = (np.mean(below_threshold) + np.mean(above_threshold)) / 2
-                # elif below_threshold.size > 0:
-                #     threshold = np.mean(below_threshold)
-                # elif above_threshold.size > 0:
-                #     threshold = np.mean(above_threshold)
-                # else:
-                #     threshold = threshold
-
                 # Calculate the new threshold as the average of below_threshold and above_threshold
                 threshold = (np.mean(below_threshold) + np.mean(above_threshold)) / 2
                 # If the magnitude is below the threshold, apply median filter
@@ -414,59 +404,4 @@ def rigid_register():
         os.remove("Registration/"+name+"_registered_img.nii.gz")
     sitk.WriteImage(registered_image, "Registration/"+name+"_registered_img.nii.gz")
 
-    # Crear una ventana
-    window = ctk.CTkToplevel()
-    screen_width = 1920
-    screen_height = 1080
-    #Set window dimensions
-    window_width = int(screen_width * 0.2)
-    window_height = int(screen_height*0.05)
-    #Position
-    x = int(screen_width*0.25)
-    y = int(screen_height*0.25)
-    window.geometry(f"{window_width}x{window_height}+{x}+{y}")
-    # Definir el mensaje que se mostrará
-    mensaje = "Se ha registrado la imagen con exito"
-
-    # Crear un widget Label para mostrar el mensaje
-    label = ctk.CTkLabel(window, text=mensaje)
-    label.pack()
-
-    # Mostrar la ventana
-    window.mainloop()
-
-# def rigid_register():
-#     fixed_path = filedialog.askopenfilename(filetypes=[("NIfTI files", "FLAIR.nii.gz")])
-#     global path
-#     # Read the fixed and moving images
-#     fixed_image = image_read(fixed_path)
-#     moving_image = image_read(path)
-
-#     # Perform rigid registration
-#     transform = registration(fixed=fixed_image, moving=moving_image, type_of_transform='Rigid')
-
-#     # Apply the transformation to the moving image
-#     registered_image = apply_transforms(fixed=fixed_image, moving=moving_image, transformlist=transform['fwdtransforms'])
-    
-#     image_write(registered_image, "Registration/registered_img.nii.gz")
-
-#     # Crear una ventana
-#     window = ctk.CTkToplevel()
-#     screen_width = 1920
-#     screen_height = 1080
-#     #Set window dimensions
-#     window_width = int(screen_width * 0.2)
-#     window_height = int(screen_height*0.05)
-#     #Position
-#     x = int(screen_width*0.25)
-#     y = int(screen_height*0.25)
-#     window.geometry(f"{window_width}x{window_height}+{x}+{y}")
-#     # Definir el mensaje que se mostrará
-#     mensaje = "Se ha registrado la imagen con exito"
-
-#     # Crear un widget Label para mostrar el mensaje
-#     label = ctk.CTkLabel(window, text=mensaje)
-#     label.pack()
-
-#     # Mostrar la ventana
-#     window.mainloop()
+    messagebox.showinfo(title="Success", message="You have registered your image successfully")

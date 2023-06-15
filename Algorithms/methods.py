@@ -44,7 +44,7 @@ def save_image(image, filename):
 #K-Means algorithm
 def k_img(image, tolerance, iterations, k, axis, axis_value):
     # initialize centroids
-    centroids = np.linspace(np.amin(image), np.amax(image), k)
+    centroids = np.linspace(np.amin(image), np.amax(image), num=k)
     for i in range(iterations):
         distance = np.abs(image[..., np.newaxis] - centroids)
         segmentation = np.argmin(distance, axis=-1)
