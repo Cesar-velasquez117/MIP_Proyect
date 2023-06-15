@@ -44,18 +44,18 @@ def on_validate_int(new_value):
         return True
     return is_int(new_value)
 
-def show_image(original, filtered, canva, axis, window):
+def show_image(filtered, canva, axis, window):
     global canvas_widget2, fig2, ax2, ax3, slider2, set_value_button2, slider_value_entry2
     canva.delete("all")
     #Slider 
     global axis2
     axis2 = axis
     if (axis2 == "x"):
-        slider2 = ctk.CTkSlider(window, from_=0, to=original.shape[0]-1)
+        slider2 = ctk.CTkSlider(window, from_=0, to=filtered.shape[0]-1)
     elif (axis2 == "y"):
-        slider2 = ctk.CTkSlider(window, from_=0, to=original.shape[1]-1)
+        slider2 = ctk.CTkSlider(window, from_=0, to=filtered.shape[1]-1)
     elif (axis2 == "z"):
-        slider2 = ctk.CTkSlider(window, from_=0, to=original.shape[2]-1)
+        slider2 = ctk.CTkSlider(window, from_=0, to=filtered.shape[2]-1)
     slider2.set(0)
     slider2.place(relx=0.175, rely=0.95, anchor="c")
 
@@ -65,18 +65,18 @@ def show_image(original, filtered, canva, axis, window):
         if axis2 == "x":
             if value < 0:
                 value = 0
-            elif value >= original.shape[0]:
-                value = original.shape[0] - 1
+            elif value >= filtered.shape[0]:
+                value = filtered.shape[0] - 1
         elif axis2 == "y":
             if value < 0:
                 value = 0
-            elif value >= original.shape[1]:
-                value = original.shape[1] - 1
+            elif value >= filtered.shape[1]:
+                value = filtered.shape[1] - 1
         elif axis2 == "z":
             if value < 0:
                 value = 0
-            elif value >= original.shape[2]:
-                value = original.shape[2] - 1
+            elif value >= filtered.shape[2]:
+                value = filtered.shape[2] - 1
         slider2.set(value)
         update_image()
 
@@ -91,20 +91,20 @@ def show_image(original, filtered, canva, axis, window):
         if (axis2 == "x"):
             x = int(slider2.get())
             axis_value2 = x
-            ax2.imshow(original[x,:,:])
-            ax3.imshow(filtered[x,:,:])
+            #ax2.imshow(original[x,:,:])
+            ax2.imshow(filtered[x,:,:])
             canvas_widget2.draw()
         elif (axis2 == "y"):
             y = int(slider2.get())
             axis_value2 = y
-            ax2.imshow(original[:,y,:])
-            ax3.imshow(filtered[:,y,:])
+            #ax2.imshow(original[:,y,:])
+            ax2.imshow(filtered[:,y,:])
             canvas_widget2.draw()
         elif (axis2 == "z"):
             z = int(slider2.get())
             axis_value2 = z
-            ax2.imshow(original[:,:,z])
-            ax3.imshow(filtered[:,:,z])
+            #ax2.imshow(original[:,:,z])
+            ax2.imshow(filtered[:,:,z])
             canvas_widget2.draw()
         
     slider2.bind("<B1-Motion>", update_image)
@@ -112,22 +112,23 @@ def show_image(original, filtered, canva, axis, window):
     if fig2 is not None:
         fig2.clf()
         fig2 = None
+        #ax2 = None
         ax2 = None
-        ax3 = None
         canvas_widget2.get_tk_widget().destroy()
         canvas_widget2 = None
         
-    fig2, (ax2,ax3)= plt.subplots(1,2)
+    #fig2, (ax2,ax3)= plt.subplots(1,2)
+    fig2, ax2= plt.subplots()
 
     if (axis2 == "x"):
-        ax2.imshow(original[0,:,:])
-        ax3.imshow(filtered[0,:,:])
+        #ax2.imshow(original[0,:,:])
+        ax2.imshow(filtered[0,:,:])
     elif (axis2 == "y"):
-        ax2.imshow(original[:,0,:])
-        ax3.imshow(filtered[:,0,:])
+        #ax2.imshow(original[:,0,:])
+        ax2.imshow(filtered[:,0,:])
     elif (axis2 == "z"):
-        ax2.imshow(original[:,:,0])
-        ax3.imshow(filtered[:,:,0])
+        #ax2.imshow(original[:,:,0])
+        ax2.imshow(filtered[:,:,0])
         
     canvas_widget2 = FigureCanvasTkAgg(fig2,canva)
     canvas_widget2.get_tk_widget().configure(width=580, height=435)
@@ -289,8 +290,9 @@ def mean_filter(canva,axis, window):
               avg = avg + image[x+dx, y+dy, z+dz]
 
         filtered_image_data[x+1, y+1, z+1] = avg / 27
-  show_image(image, filtered_image_data,canva,axis,window)
+
   image = filtered_image_data
+  show_image(image,canva,axis,window)
 
 def median_filter(canva,axis,window):
     global image
@@ -306,8 +308,9 @@ def median_filter(canva,axis,window):
 
                 median = np.median(neightbours)
                 filtered_image_data[x+1, y+1, z+1] = median
-    show_image(image, filtered_image_data, canva, axis, window)
+    
     image = filtered_image_data
+    show_image(image, canva, axis, window)
 
 def edge_filter(canva, axis, window):
     global image
@@ -354,23 +357,26 @@ def edge_filter(canva, axis, window):
                     filtered_image_data[x, y, z] = median
                 else:
                     filtered_image_data[x, y, z] = image[x, y, z]
-    
-    show_image(image, filtered_image_data, canva, axis, window)
+     
     image = filtered_image_data
+    show_image(image, canva, axis, window)
 
 ######################################################################################################################
 #REGISTRATION
 
 def rigid_register():
     fixed_path = filedialog.askopenfilename(filetypes=[("NIfTI files", "FLAIR.nii.gz")])
+    segmented_path = filedialog.askopenfilename(filetypes=[("NIfTI files", "*.nii.gz")])
     global path
     #Load Images
     fixed_image = sitk.ReadImage(fixed_path)
     moving_image = sitk.ReadImage(path)
+    segmented_image = sitk.ReadImage(segmented_path)
 
     #Convert image types
     fixed_image = sitk.Cast(fixed_image, sitk.sitkFloat32)
     moving_image = sitk.Cast(moving_image, sitk.sitkFloat32)
+    segmented_image = sitk.Cast(segmented_image, sitk.sitkFloat32)
 
     # Define the registration components
     registration_method = sitk.ImageRegistrationMethod()
@@ -397,7 +403,7 @@ def rigid_register():
     final_transform = registration_method.Execute(fixed_image, moving_image)
 
     # Apply the final transformation to the moving image
-    registered_image = sitk.Resample(moving_image, fixed_image, final_transform, sitk.sitkNearestNeighbor, 0.0, fixed_image.GetPixelID())
+    registered_image = sitk.Resample(segmented_image, fixed_image, final_transform, sitk.sitkNearestNeighbor, 0.0, fixed_image.GetPixelID())
 
     # Save the registered image as NIfTI
     # Verificar si el archivo existe
