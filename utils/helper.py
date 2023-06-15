@@ -22,6 +22,7 @@ def add_sidebar(window, window2):
         processing_button = ctk.CTkButton(sidebar, text="Processing Methods", width=140, height=30, command=lambda: processing(window, window2), state="disabled")
     listbox = Listbox(sidebar, width=30)
     volume_button = ctk.CTkButton(sidebar, text="Calculate Volumes", width=140, height=30, command=lambda: calculate_volume(listbox) )
+    volume_label = ctk.CTkLabel(sidebar, text="Voxel Count", font=("Times New Roman", 20, "bold"))
     sidebar_img = ctk.CTkImage(light_image=Image.open("Image/sidebar.png"),dark_image=Image.open("Image/sidebar.png"),size=(50,50))
     sidebar_button = ctk.CTkButton(window, width=50,text="", image=sidebar_img, command=sidebar.animate, fg_color="transparent", hover_color="lightgray", anchor="w")
     #Sidebar elements
@@ -29,7 +30,8 @@ def add_sidebar(window, window2):
     processing_button.place(relx=0.5, rely=0.1, anchor="c")
     preprocess_button.place(relx=0.5, rely=0.2, anchor="c")
     volume_button.place(relx=0.5, rely=0.3, anchor="c")
-    listbox.place(relx=0.5, rely=0.6, anchor="c")
+    volume_label.place(relx=0.5, rely=0.5, anchor="c")
+    listbox.place(relx=0.5, rely=0.7, anchor="c")
 
 def is_int(s):
     try:
@@ -331,7 +333,7 @@ def calculate_volume(listbox):
             voxel_size = np.abs(lesion_image.affine.diagonal()[:3])
             mm3 = volume * np.prod(voxel_size)
             volumes_mm3[value] = mm3
-            listbox.insert("end", f"Label {int(value)} : {mm3}")
+            listbox.insert("end", f"Label {int(value)} : {volume}")
             listbox.insert("end","\n")
     print("Voxeles: ",volumes)
     print("MM3: ", volumes_mm3)
