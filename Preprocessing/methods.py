@@ -1,5 +1,5 @@
 from scipy.signal import find_peaks
-from ants import get_ants_data, image_read, resample_image, get_mask, registration, apply_transforms, from_numpy, image_write
+#from ants import get_ants_data, image_read, resample_image, get_mask, registration, apply_transforms, from_numpy, image_write
 import nibabel as nib
 import matplotlib.pyplot as plt
 import os
@@ -407,10 +407,12 @@ def rigid_register():
 
     # Save the registered image as NIfTI
     # Verificar si el archivo existe
-    if os.path.exists("Registration/registered_img.nii.gz"):
+    name , extension = os.path.splitext(os.path.basename(path))
+    name = name.split('.')[0]
+    if os.path.exists("Registration/"+name+"_registered_img.nii.gz"):
         # Borrar el archivo existente
-        os.remove("Registration/registered_img.nii.gz")
-    sitk.WriteImage(registered_image, "Registration/registered_img.nii.gz")
+        os.remove("Registration/"+name+"_registered_img.nii.gz")
+    sitk.WriteImage(registered_image, "Registration/"+name+"_registered_img.nii.gz")
 
     # Crear una ventana
     window = ctk.CTkToplevel()

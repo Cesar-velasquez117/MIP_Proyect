@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from utils.helper import add_sidebar, on_validate_int, browse_file, on_closing, method_clicked, denoise_clicked, option_clicked, borders
+from utils.helper import add_sidebar, on_validate_int, browse_file, on_closing, method_clicked, denoise_clicked, option_clicked, borders, remove_skull
 from utils.globals import *
 from Preprocessing.methods import set_image, get_updated_image, delete_fig, rigid_register
 #FUNCTIONS
@@ -203,14 +203,14 @@ option = ctk.StringVar(value="original")
 #Frames
 welcome_frame = ctk.CTkFrame(master=window, width=window_width/2,height=110 )
 img_option_frame = ctk.CTkFrame(master=window, width= window_width/3, height=210)
-radiobutton_frame = ctk.CTkFrame(master=window, width= window_width/4, height=250)
+radiobutton_frame = ctk.CTkFrame(master=window, width= window_width*0.2, height=250)
 
 #Labels
 welcome_label = ctk.CTkLabel(welcome_frame, text="Welcome to this image processing App", text_color="blue", font=("Times New Roman", 25, "bold"))
 selected_file_label = ctk.CTkLabel(welcome_frame, text="")
 files_label = ctk.CTkLabel(img_option_frame, text="Files Loaded: ", font=("Times New Roman", 20, "bold"))
 axis_label = ctk.CTkLabel(img_option_frame, text="Axis: ", font=("Times New Roman", 20, "bold"))
-segmentation_label = ctk.CTkLabel(master=radiobutton_frame, text="Choose your segmentation method: ", font=("Times New Roman", 20, "bold"))
+segmentation_label = ctk.CTkLabel(master=radiobutton_frame, text="Choose a method: ", font=("Times New Roman", 20, "bold"))
 
 #Buttons
 browse_button = ctk.CTkButton(welcome_frame, text="Browse Image", width=40, height=28, command=lambda: browse_file(selected_file_label, path_list, paths_combobox, paths_combobox2))
@@ -218,7 +218,7 @@ show_img_button = ctk.CTkButton(img_option_frame, text="Show Image", width=40 ,c
 apply_button = ctk.CTkButton(master=radiobutton_frame, text="Apply Method", width=40,command = lambda: option_clicked(get_updated_image(), option, axis,axis_value))
 set_button = ctk.CTkButton(img_option_frame, text="Set",width=70,command=lambda: set_image(paths_combobox.get(), selected_file_label, selected_file_label2))
 show_border_button = ctk.CTkButton(img_option_frame, text="Show Borders", width=40, command= display_borders)
-
+remove_button = ctk.CTkButton(img_option_frame, text = "Remove Skull", width=40, command = remove_skull)
 #Radio Buttons
 
 thresholding_button = ctk.CTkRadioButton(master=radiobutton_frame, text="Thresholding", variable = option, value="thresholding")
@@ -255,16 +255,17 @@ paths_combobox.place(relx=0.35, y=20, anchor="w")
 set_button.place(relx=0.8, y = 20, anchor="w")
 axis_label.place(relx=0.05, y=60, anchor="w")
 axis_combobox.place(relx=0.35, y=60, anchor="w")
-show_img_button.place(relx=0.49, y = 180, anchor="e")
-show_border_button.place(relx=0.51, y=180, anchor="w")
+show_img_button.place(relx=0.5, y = 180, anchor="c")
+show_border_button.place(relx=0.75, y=180, anchor="c")
+remove_button.place(relx=0.25, y=180, anchor="c")
 #Processing Methods Frame
-radiobutton_frame.place(relx=0.25, rely=0.75, anchor="c")
+radiobutton_frame.place(relx=0.25, rely=0.75, anchor="e")
 segmentation_label.place(x=10, y= 20, anchor="w")
 thresholding_button.place(x=10, y=60, anchor="w")
 reg_growing_button.place(x=10, y=100, anchor="w")
 k_means_button.place(x=10, y=140, anchor="w")
 gaussian_button.place(x=10, y=180, anchor="w")
-apply_button.place(x=160, y = 200, anchor="n")
+apply_button.place(relx=0.5, y = 200, anchor="n")
 
 #GUI Preprocessing
 window2 = ctk.CTkToplevel()

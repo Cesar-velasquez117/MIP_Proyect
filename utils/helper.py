@@ -1,5 +1,10 @@
 import customtkinter as ctk
 import numpy as np
+import SimpleITK as sitk
+import os
+import nibabel as nib
+import matplotlib.pyplot as plt
+from scipy import ndimage
 from tkinter import filedialog
 from PIL import Image
 from Classes.SlidePanel import SlidePanel
@@ -122,3 +127,70 @@ def borders(image):
     
     magnitud = np.sqrt(np.power(dfdx, 2) + np.power(dfdy, 2) + np.power(dfdz, 2))
     return magnitud
+
+def k_means(image, iterations, k):
+    # initialize centroids
+    centroids = np.linspace(np.amin(image), np.amax(image), k)
+    for i in range(iterations):
+        distance = np.abs(image[..., np.newaxis] - centroids)
+        segmentation = np.argmin(distance, axis=-1)
+
+        for id in range(k):
+            centroids[id] = image[segmentation == id].mean()
+    return segmentation
+def remove_skull():
+    if (os.path.exists('Registration/IR_registered_img.nii.gz') and os.path.exists('Registration/T1_registered_img.nii.gz')):
+        #Load IR image
+        img = nib.load('Registration/IR_registered_img.nii.gz')
+
+        #Get data
+        data = img.get_fdata()
+
+        #Definicion de las escalas espaciales
+        scales = [7.5] #Escalas para aplicar filtros
+
+        #Aplicar filtros gaussianos en diferentes escalas
+        filtered_imgs = []
+        for scale in scales:
+            #Aplicacion del filtro gaussiano
+            filtered = ndimage.gaussian_filter(data, sigma=scale)
+            filtered = k_means(filtered, 10, 2)
+            extracted_brain = nib.Nifti1Image(filtered, img.affine, dtype=np.int16)
+
+            #Guardar la imagen con el cerebro extraido
+            nib.save(extracted_brain, 'Skull/IR_skull.nii.gz')
+            filtered_imgs.append(filtered)
+
+        #Restar Imagen
+        #Cargar imagenes FLAIR e IR(sin craneo)
+        original_img = sitk.ReadImage('Registration/T1_registered_img.nii.gz')
+        reference_img = sitk.ReadImage('Skull/IR_skull.nii.gz')
+
+        #Realizar segmentacion basada en un umbral adaptativo
+        otsu_filter = sitk.OtsuThresholdImageFilter()
+        otsu_filter.SetInsideValue(1)
+        otsu_filter.SetOutsideValue(0)
+        ref_mask = otsu_filter.Execute(reference_img)
+
+        # Apply mask to the original image
+        img_without_skull = sitk.Mask(original_img, ref_mask)
+
+        # Get data from the image without skull
+        data_skull = sitk.GetArrayFromImage(img_without_skull)
+
+        # Get data from mask
+        mask_data = sitk.GetArrayFromImage(ref_mask)
+
+        # Create bool mask for 0 values inside the brain
+        mask_brain_cero =  (data_skull == 0) & (mask_data != 0)
+        
+        # Asign a diferent value to values diferent from 0 inside the brain
+        new_value = np.max(original_img) + 1
+        data_skull[mask_brain_cero] = new_value
+
+        # Create new SimpleITK image with modified data
+        img_without_skull_modified = sitk.GetImageFromArray(data_skull)
+        img_without_skull_modified.CopyInformation(img_without_skull)
+
+        # Save Image without 
+        sitk.WriteImage(img_without_skull_modified, 'Skull/FLAIR_skull.nii.gz')

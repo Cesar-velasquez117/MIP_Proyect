@@ -32,25 +32,25 @@ def on_validate_float(new_value):
     return is_float(new_value)
 #Function to save the image 
 def save_image(image, filename):
+    name , extension = os.path.splitext(os.path.basename(get_updated_path()))
+    name = name.split('.')[0]
     imageUploaded = nib.load(get_updated_path())
     affine = imageUploaded.affine
     # Create a nibabel image object from the image data
     image = nib.Nifti1Image(image.astype(np.float32), affine=affine)
     # Save the image as a NIfTI file
-    output_path = os.path.join("Segmentations", filename)
+    output_path = os.path.join("Segmentations", name+"_"+filename)
     nib.save(image, output_path)
 #K-Means algorithm
 def k_img(image, tolerance, iterations, k, axis, axis_value):
     # initialize centroids
     centroids = np.linspace(np.amin(image), np.amax(image), k)
     for i in range(iterations):
-        distance = [np.abs(k - image) for k in centroids]
-        segmentation = np.argmin(distance, axis=0)
+        distance = np.abs(image[..., np.newaxis] - centroids)
+        segmentation = np.argmin(distance, axis=-1)
 
         for id in range(k):
-            cluster = image[segmentation == id]
-            if len(cluster) > 0:
-                centroids[id] = cluster.mean()
+            centroids[id] = image[segmentation == id].mean()
 
     save_image(segmentation, "k-means_segmentation.nii.gz")
     #Show image
@@ -435,3 +435,5 @@ def gaussian_form(image, axis, axis_value):
     finish_button.place(relx=0.5, rely= 0.85, anchor="n")
 
     top.mainloop()
+
+########################################################################################
