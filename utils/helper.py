@@ -5,7 +5,7 @@ import os
 import nibabel as nib
 import matplotlib.pyplot as plt
 from scipy import ndimage
-from tkinter import filedialog, messagebox, Listbox
+from tkinter import filedialog, messagebox, Listbox, simpledialog
 from PIL import Image
 from Classes.SlidePanel import SlidePanel
 from Preprocessing.methods import rescaling, zscore, white_stripe, mean_filter, median_filter, edge_filter, hist_matching
@@ -180,12 +180,11 @@ def Median_borders(image):
      
     return filtered_image_data
 
-def remove_skull(path):
-    if (os.path.exists('Registration/IR_registered_img.nii.gz')and os.path.exists('Registration/T1_registered_img.nii.gz') ):
+def remove_skull():
+    if (os.path.exists('Registration/IR_registered_img.nii.gz') and os.path.exists('Registration/T1_registered_img.nii.gz') ):
         # Cargar la imagen NIfTI
 
-        nifti_img = nib.load(
-        "Registration/IR_registered_img.nii.gz")
+        nifti_img = nib.load("Registration/IR_registered_img.nii.gz")
         # Asegúrate de ajustar la ruta y el nombre del archivo
 
         # Obtener los datos de la imagen
@@ -201,9 +200,7 @@ def remove_skull(path):
             filtered = ndimage.gaussian_filter(data, sigma=scale)
             filtered = k_means(filtered, 2,15)
             # Crear una nueva imagen nibabel con el cerebro extraído
-            brain_extracted_image = nib.Nifti1Image(
-            filtered, affine=nifti_img.affine, dtype=np.int16
-            )
+            brain_extracted_image = nib.Nifti1Image(filtered, affine=nifti_img.affine, dtype=np.int16)
 
             # Guardar la imagen con el cerebro extraído en un nuevo archivo
             nib.save(brain_extracted_image,  "Skull/IR_skull.nii.gz")
@@ -212,8 +209,7 @@ def remove_skull(path):
         # RESTAR UNA IMAGEN
 
         # Cargar las imágenes
-        imagen_original = sitk.ReadImage(
-        "Registration/T1_registered_img.nii.gz")
+        imagen_original = sitk.ReadImage("Registration/T1_registered_img.nii.gz")
     
         imagen_referencia = sitk.ReadImage("Skull/IR_skull.nii.gz")
 
@@ -258,21 +254,8 @@ def remove_skull(path):
         # Quitar cráneo a FLAIR Original
         # ----------------------------------------------------------------------------------
         # Cargar las imágenes
-        imageno= nib.load(path)
-        imagenx= nib.load(path).get_fdata()
-        imagenx2=Median_borders(imagenx)
-
-        brain_extracted_image = nib.Nifti1Image(
-            imagenx2, affine= imageno.affine, dtype=np.int16
-            )
-
-            # Guardar la imagen con el cerebro extraído en un nuevo archivo
-        nib.save(brain_extracted_image,  "Skull/FLAIR.nii.gz")
-        
-
-        imagen_original = sitk.ReadImage("Skull/FLAIR.nii.gz")
+        imagen_original = sitk.ReadImage("Segmentations/FLAIR_k-means_segmentation.nii.gz")
         imagen_referencia = sitk.ReadImage("Skull/IR_skull.nii.gz")
-
         # Realizar segmentación basada en umbral adaptativo
         otsu_filter = sitk.OtsuThresholdImageFilter()
         otsu_filter.SetInsideValue(1)
@@ -284,29 +267,46 @@ def remove_skull(path):
 
         # Guardar la imagen sin el cráneo
 
-        sitk.WriteImage(
-            imagen_sin_craneo,
-           "Skull/original_FLAIR_skull.nii.gz"
-        )
+        sitk.WriteImage(imagen_sin_craneo,"Skull/original_FLAIR_skull.nii.gz")
 
         # ----------------------------------------------------------------------------------
         # Segmentar lesiones
         # ----------------------------------------------------------------------------------
-
+        lession_label = simpledialog.askinteger("Enter a number", "Please, enter a number (int):")
         image = nib.load("Skull/FLAIR_skull.nii.gz")
        
         image_data = image.get_fdata()
-        image_data_flair_without_skull = nib.load(
-        "Skull/original_FLAIR_skull.nii.gz").get_fdata()
+        image_data_flair_segmented = nib.load("Skull/original_FLAIR_skull.nii.gz").get_fdata()
 
-        image_data_flair_segmented = k_means(image_data_flair_without_skull, 15, 15)
+        #image_data_flair_segmented = k_means(image_data_flair_without_skull, 15, 15)
 
         # Where the values are 3, replace them in the image_data with a value of 3
         image_data_flair_segmented[:,:,:13] = 0
-        image_data = np.where(image_data_flair_segmented == 6, 3, image_data)
+        image_data_flair_segmented[:,:,40:] = 0
+        image_data = np.where(image_data_flair_segmented == lession_label, 3, image_data)
 
-        for z in range(14 - 1, -1, -1):
-            image_data[:,:,z] = np.where(image_data[:,:,z] == 3, 0, image_data[:,:,z])
+        # Cambiar los labels para que queden acorde a la segmentación de Jose Bernal
+        bg = image_data == 0
+        grey_matter = np.logical_and(image_data > 0.95, image_data <= 1.5)
+        white_matter = np.logical_and(image_data > 1.5, image_data <= 2.5)
+        lessons = np.logical_and(image_data > 2.5, image_data <= 3.5)
+        cfr_liquid = np.logical_or(
+            np.logical_and(image_data > 3.5, image_data <= 4.5),
+            np.logical_and(image_data > 0.05, image_data <= 0.95),
+        )
+
+        image_data[bg] = 0
+        image_data[cfr_liquid] = 1
+        image_data[grey_matter] = 2
+        image_data[white_matter] = 3
+        image_data[lessons] = 4
+
+        # Ajustar un poco las segmentaciones para mejorar el volumen (A los primeros planos eliminar segmentación y así reducir error de cráneo)
+        image_data[:, :, :3] = 0
+        image_data[:, :, 43:] = 0
+
+        # for z in range(14 - 1, -1, -1):
+        #     image_data[:,:,z] = np.where(image_data[:,:,z] == 3, 0, image_data[:,:,z])
 
         affine = image.affine
         # Create a nibabel image object from the image data

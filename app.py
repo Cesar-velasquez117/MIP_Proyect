@@ -218,7 +218,7 @@ show_img_button = ctk.CTkButton(img_option_frame, text="Show Image", width=40 ,c
 apply_button = ctk.CTkButton(master=radiobutton_frame, text="Apply Method", width=40,command = lambda: option_clicked(get_updated_image(), option, axis,axis_value))
 set_button = ctk.CTkButton(img_option_frame, text="Set",width=70,command=lambda: set_image(paths_combobox.get(), selected_file_label, selected_file_label2))
 show_border_button = ctk.CTkButton(img_option_frame, text="Show Borders", width=40, command= display_borders)
-remove_button = ctk.CTkButton(img_option_frame, text = "Remove Skull", width=40, command = lambda: remove_skull(paths_combobox.get()))
+remove_button = ctk.CTkButton(img_option_frame, text = "Remove Skull", width=40, command = remove_skull)
 #Radio Buttons
 
 thresholding_button = ctk.CTkRadioButton(master=radiobutton_frame, text="Thresholding", variable = option, value="thresholding")
